@@ -1,0 +1,11 @@
+[env]
+build_flags =
+    -D EXCAVATOR_MAC=0xAA,0xBB,0xCC,0xDD,0xEE,0xFF
+    ; -D OTA_HOSTNAME=R980-Control
+    ; -D OTA_PASSWORD=topsecret
+
+; [env:esp32dev-ota]
+; upload_port = R980-Control
+; upload_flags =
+;     --port=8266
+;     --auth=topsecret
