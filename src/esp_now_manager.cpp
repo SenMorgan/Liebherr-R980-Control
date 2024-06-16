@@ -17,9 +17,6 @@
 // The MAC address of the Excavator got from platformio_override.ini
 uint8_t excavatorMac[] = {EXCAVATOR_MAC};
 
-// Create a variable to store the received data
-excavator_data_struct receivedData;
-
 // Create a structure to store the peer information
 esp_now_peer_info_t peerInfo;
 
@@ -31,12 +28,9 @@ void _onDataSent(const uint8_t *mac_addr, esp_now_send_status_t status)
         Serial.printf("Data was not received by the Excavator\n");
 }
 
-// Callback when data is received
-void _onDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len)
+void registerDataRecvCallback(esp_now_recv_cb_t callback)
 {
-    memcpy(&receivedData, incomingData, sizeof(receivedData));
-    Serial.printf("\nReceived from Excavator:\nUptime: %u\nBattery: %u\nCPU Temp: %.2f °C\n",
-                  receivedData.uptime, receivedData.battery, receivedData.cpuTemp);
+    esp_now_register_recv_cb(callback);
 }
 
 void initEspNow()
@@ -62,9 +56,6 @@ void initEspNow()
 
     // Register for a callback function that will be called when data is sent
     esp_now_register_send_cb(_onDataSent);
-
-    // Register for a callback function that will be called when data is received
-    esp_now_register_recv_cb(_onDataRecv);
 }
 
 void sendDataToExcavator(const controller_data_struct &data)

@@ -10,8 +10,14 @@
 #ifndef _CONSTANTS_H
 #define _CONSTANTS_H
 
+// Period between joystick readings in milliseconds
+#define JOYSTICK_READ_PERIOD 1000
+
+// Period of status LED blink when data is received in milliseconds
+#define STATUS_LED_BLINK_PERIOD 10
+
 // IO pins
-#define LED_BUILTIN          2
+#define STATUS_LED          2
 
 // Joystick analog inputs
 #define BOOM_JOYSTICK        36
