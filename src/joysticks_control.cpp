@@ -1,5 +1,5 @@
 /**
- * @file joysticks_manager.cpp
+ * @file joysticks_control.cpp
  * @author SenMorgan https://github.com/SenMorgan
  * @date 2024-06-16
  *
@@ -8,7 +8,7 @@
  */
 
 #include <Arduino.h>
-#include "joysticks_manager.h"
+#include "joysticks_control.h"
 #include "constants.h"
 
 void setJoysticksPins()

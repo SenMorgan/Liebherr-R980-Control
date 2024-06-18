@@ -1,5 +1,5 @@
 /**
- * @file esp_now_manager.cpp
+ * @file esp_now_interface.cpp
  * @author SenMorgan https://github.com/SenMorgan
  * @date 2024-06-16
  *
@@ -7,7 +7,7 @@
  *
  */
 
-#include "esp_now_manager.h"
+#include "esp_now_interface.h"
 #include <esp_now.h>
 #include <WiFi.h>
 

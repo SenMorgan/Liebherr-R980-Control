@@ -3,8 +3,8 @@
 
 #include "constants.h"
 #include "data_structures.h"
-#include "esp_now_manager.h"
-#include "joysticks_manager.h"
+#include "esp_now_interface.h"
+#include "joysticks_control.h"
 #include "wifi_ota_manager.h"
 
 // Create a variable to store the received data

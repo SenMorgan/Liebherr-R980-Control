@@ -1,5 +1,5 @@
 /**
- * @file esp_now_manager.h
+ * @file esp_now_interface.h
  * @author SenMorgan https://github.com/SenMorgan
  * @date 2024-06-16
  *
@@ -7,8 +7,8 @@
  *
  */
 
-#ifndef ESP_NOW_MANAGER_H
-#define ESP_NOW_MANAGER_H
+#ifndef ESP_NOW_INTERFACE_H
+#define ESP_NOW_INTERFACE_H
 
 #include <esp_now.h>
 
@@ -18,4 +18,4 @@ void initEspNow();
 void registerDataRecvCallback(esp_now_recv_cb_t callback);
 void sendDataToExcavator(const controller_data_struct &data);
 
-#endif // ESP_NOW_MANAGER_H
+#endif // ESP_NOW_INTERFACE_H

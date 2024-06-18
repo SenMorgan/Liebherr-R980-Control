@@ -1,5 +1,5 @@
 /**
- * @file joysticks_manager.h
+ * @file joysticks_control.h
  * @author SenMorgan https://github.com/SenMorgan
  * @date 2024-06-16
  *
@@ -7,12 +7,12 @@
  *
  */
 
-#ifndef JOYSTICK_MANAGER_H
-#define JOYSTICK_MANAGER_H
+#ifndef JOYSTICKS_MANAGER_H
+#define JOYSTICKS_MANAGER_H
 
 #include "data_structures.h"
 
 void setJoysticksPins();
 void readJoysticksPositions(controller_data_struct &data);
 
-#endif // JOYSTICK_MANAGER_H
+#endif // JOYSTICKS_MANAGER_H
