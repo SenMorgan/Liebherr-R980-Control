@@ -1,4 +1,3 @@
-#include <esp_now.h>
 #include <WiFi.h>
 #include <Wire.h>
 
@@ -6,6 +5,7 @@
 #include "data_structures.h"
 #include "esp_now_manager.h"
 #include "joysticks_manager.h"
+#include "wifi_ota_manager.h"
 
 // Create a variable to store the received data
 excavator_data_struct receivedData;
@@ -47,28 +47,35 @@ void setup()
     setJoysticksPins();
     pinMode(STATUS_LED, OUTPUT);
 
-    // Turn off the built-in LED
-    digitalWrite(STATUS_LED, LOW);
+    // Turn on the built-in LED
+    digitalWrite(STATUS_LED, HIGH);
 
     // Init Serial Monitor
     Serial.begin(115200);
 
-    // Set device as a Wi-Fi Station
-    WiFi.mode(WIFI_STA);
+    // Init Wi-Fi and OTA
+    setupWiFi();
+    setupOTA();
 
     // Init ESP-NOW
     initEspNow();
 
-    // Register for a callback function that will be called when data is received
+    // Register callback for data received from Excavator
     registerDataRecvCallback(onDataFromExcavator);
+
+    // Finish initialization by logging message and turning off the built-in LED
+    Serial.println(HOSTNAME + String(" initialized"));
+    digitalWrite(STATUS_LED, LOW);
 }
 
 void loop()
 {
+    handleOTA();
+
     manageStatusLed();
 
     // Read joysticks positions and send data to Excavator
-    if (millis() - lastJoystickReadTime > JOYSTICK_READ_PERIOD)
+    if (millis() - lastJoystickReadTime > JOYSTICK_READ_INTERVAL)
     {
         lastJoystickReadTime = millis();
         readJoysticksPositions(dataToSend);
