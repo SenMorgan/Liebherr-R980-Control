@@ -27,11 +27,11 @@
 #define LED_BUTTON_C 13
 
 // Joystick analog inputs - only ADC1 pins, cause ADC2 is used by Wi-Fi
-#define BOOM_JOYSTICK        36
-#define DIPPER_JOYSTICK      39
-#define BUCKET_JOYSTICK      34
-#define SWING_JOYSTICK       35
-#define TRACK_LEFT_JOYSTICK  32
-#define TRACK_RIGHT_JOYSTICK 33
+#define BOOM_JOYSTICK        32
+#define DIPPER_JOYSTICK      33
+#define BUCKET_JOYSTICK      35
+#define SWING_JOYSTICK       34
+#define TRACK_LEFT_JOYSTICK  36
+#define TRACK_RIGHT_JOYSTICK 39
 
 #endif // _CONSTANTS_H

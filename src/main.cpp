@@ -1,6 +1,7 @@
 #include <WiFi.h>
 #include <Wire.h>
 #include <EncButton.h>
+#include <GyverJoy.h>
 
 #include "constants.h"
 #include "data_structures.h"
@@ -16,6 +17,8 @@ controller_data_struct dataToSend;
 
 Button powerBtn(POWER_BUTTON, INPUT_PULLUP);
 
+GyverJoy bucketJoystick(BUCKET_JOYSTICK);
+
 volatile bool ledStatus = false;
 volatile uint32_t lastDataReceivedTime = 0;
 
@@ -27,8 +30,8 @@ bool isBoardPowered = false;
 void onDataFromExcavator(const uint8_t *mac, const uint8_t *incomingData, int len)
 {
     memcpy(&receivedData, incomingData, sizeof(receivedData));
-    Serial.printf("\nReceived from Excavator:\nUptime: %u\nBattery: %u\nCPU Temp: %.2f °C\n",
-                  receivedData.uptime, receivedData.battery, receivedData.cpuTemp);
+    // Serial.printf("\nReceived from Excavator:\nUptime: %u\nBattery: %u\nCPU Temp: %.2f °C\n",
+    //               receivedData.uptime, receivedData.battery, receivedData.cpuTemp);
 
     // Turn on the built-in LED, set flag and save the last time data was received
     digitalWrite(STATUS_LED, HIGH);
@@ -51,10 +54,23 @@ void powerButtonCallback()
     switch (powerBtn.action())
     {
         case EB_CLICK:
-            isBoardPowered = !isBoardPowered;
-            digitalWrite(BOARD_POWER, isBoardPowered);
             Serial.println("Power button clicked");
-            Serial.println(isBoardPowered ? "Board powered ON" : "Board powered OFF");
+            isBoardPowered = !isBoardPowered;
+            if (isBoardPowered)
+            {
+                // Turn ON the board and potentiometers power
+                digitalWrite(BOARD_POWER, HIGH);
+                Serial.println("Board powered ON");
+
+                // Calibrate joysticks after power ON
+                bucketJoystick.calibrate();
+            }
+            else
+            {
+                // Turn OFF the board and potentiometers power
+                digitalWrite(BOARD_POWER, LOW);
+                Serial.println("Board powered OFF");
+            }
             break;
     }
 }
@@ -109,6 +125,12 @@ void setup()
 
     powerBtn.attach(powerButtonCallback);
 
+    // Change ADC resolution to 10 bits for GyverJoy library
+    analogReadResolution(10);
+    bucketJoystick.invert(true);
+    bucketJoystick.deadzone(30);
+    bucketJoystick.exponent(GJ_SQUARE);
+
     // Init Serial Monitor
     Serial.begin(115200);
 
@@ -137,10 +159,16 @@ void loop()
 
     ledsAnimation();
 
+    if (bucketJoystick.tick())
+    {
+        Serial.println(bucketJoystick.value());
+    }
+
     // Read joysticks positions and send data to Excavator
     if (millis() - lastJoystickReadTime > JOYSTICK_READ_INTERVAL)
     {
         lastJoystickReadTime = millis();
+
         readJoysticksPositions(dataToSend);
         sendDataToExcavator(dataToSend);
     }
