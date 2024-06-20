@@ -59,12 +59,50 @@ void powerButtonCallback()
     }
 }
 
+void ledsAnimation()
+{
+#define BLINK_INTERVAL 250
+
+    static uint32_t lastBlinkTime = 0;
+    static uint8_t currentLed = LED_BUTTON_C; // Start with LED A
+
+    if (isBoardPowered && millis() - lastBlinkTime >= BLINK_INTERVAL)
+    {
+        lastBlinkTime = millis(); // Update the last blink time
+
+        // Turn off all LEDs
+        digitalWrite(LED_BUTTON_A, LOW);
+        digitalWrite(LED_BUTTON_B, LOW);
+        digitalWrite(LED_BUTTON_C, LOW);
+
+        // Turn on the next LED
+        digitalWrite(currentLed, HIGH);
+
+        // Move to the next LED in sequence (from C to A)
+        switch (currentLed)
+        {
+            case LED_BUTTON_A:
+                currentLed = LED_BUTTON_C;
+                break;
+            case LED_BUTTON_B:
+                currentLed = LED_BUTTON_A;
+                break;
+            case LED_BUTTON_C:
+                currentLed = LED_BUTTON_B;
+                break;
+        }
+    }
+}
+
 void setup()
 {
     // Setup pins
     setJoysticksPins();
     pinMode(STATUS_LED, OUTPUT);
     pinMode(BOARD_POWER, OUTPUT);
+    pinMode(LED_BUTTON_A, OUTPUT);
+    pinMode(LED_BUTTON_B, OUTPUT);
+    pinMode(LED_BUTTON_C, OUTPUT);
 
     // Turn on the built-in LED
     digitalWrite(STATUS_LED, HIGH);
@@ -96,6 +134,8 @@ void loop()
     manageStatusLed();
 
     powerBtn.tick();
+
+    ledsAnimation();
 
     // Read joysticks positions and send data to Excavator
     if (millis() - lastJoystickReadTime > JOYSTICK_READ_INTERVAL)
