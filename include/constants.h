@@ -18,8 +18,10 @@
 
 // IO pins
 #define STATUS_LED 2
+#define POWER_BUTTON 16
+#define BOARD_POWER  27
 
-// Joystick analog inputs
+// Joystick analog inputs - only ADC1 pins, cause ADC2 is used by Wi-Fi
 #define BOOM_JOYSTICK        36
 #define DIPPER_JOYSTICK      39
 #define BUCKET_JOYSTICK      34

@@ -1,5 +1,6 @@
 #include <WiFi.h>
 #include <Wire.h>
+#include <EncButton.h>
 
 #include "constants.h"
 #include "data_structures.h"
@@ -13,10 +14,14 @@ excavator_data_struct receivedData;
 // Create a variable to store the data that will be sent to the Excavator
 controller_data_struct dataToSend;
 
+Button powerBtn(POWER_BUTTON, INPUT_PULLUP);
+
 volatile bool ledStatus = false;
 volatile uint32_t lastDataReceivedTime = 0;
 
 uint32_t lastJoystickReadTime = 0;
+
+bool isBoardPowered = false;
 
 // Callback when data from Excavator received
 void onDataFromExcavator(const uint8_t *mac, const uint8_t *incomingData, int len)
@@ -41,14 +46,30 @@ void manageStatusLed()
     }
 }
 
+void powerButtonCallback()
+{
+    switch (powerBtn.action())
+    {
+        case EB_CLICK:
+            isBoardPowered = !isBoardPowered;
+            digitalWrite(BOARD_POWER, isBoardPowered);
+            Serial.println("Power button clicked");
+            Serial.println(isBoardPowered ? "Board powered ON" : "Board powered OFF");
+            break;
+    }
+}
+
 void setup()
 {
     // Setup pins
     setJoysticksPins();
     pinMode(STATUS_LED, OUTPUT);
+    pinMode(BOARD_POWER, OUTPUT);
 
     // Turn on the built-in LED
     digitalWrite(STATUS_LED, HIGH);
+
+    powerBtn.attach(powerButtonCallback);
 
     // Init Serial Monitor
     Serial.begin(115200);
@@ -73,6 +94,8 @@ void loop()
     handleOTA();
 
     manageStatusLed();
+
+    powerBtn.tick();
 
     // Read joysticks positions and send data to Excavator
     if (millis() - lastJoystickReadTime > JOYSTICK_READ_INTERVAL)
