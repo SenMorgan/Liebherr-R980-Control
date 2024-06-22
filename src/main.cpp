@@ -16,7 +16,12 @@ controller_data_struct dataToSend;
 
 Button powerBtn(POWER_BUTTON, INPUT_PULLUP);
 
-Joystick bucketJoystick(BUCKET_JOYSTICK, 5, 900, true, 30);
+Joystick boomJoy(BOOM_JOYSTICK, 10, 1010, true);
+Joystick stickJoy(STICK_JOYSTICK, 10, 900, true);
+Joystick bucketJoy(BUCKET_JOYSTICK, 65, 1010, true);
+Joystick swingJoy(SWING_JOYSTICK, 10, 930, false);
+Joystick trackLeftJoy(TRACK_LEFT_JOYSTICK, 10, 1010, true);
+Joystick trackRightJoy(TRACK_RIGHT_JOYSTICK, 10, 1010, true);
 
 volatile bool ledStatus = false;
 volatile uint32_t lastDataReceivedTime = 0;
@@ -56,7 +61,12 @@ void powerOnBoard()
     Serial.println("Board powered ON");
 
     // Calibrate joysticks after power ON
-    bucketJoystick.calibrate();
+    boomJoy.calibrate();
+    stickJoy.calibrate();
+    bucketJoy.calibrate();
+    swingJoy.calibrate();
+    trackLeftJoy.calibrate();
+    trackRightJoy.calibrate();
 }
 
 void powerOffBoard()
@@ -164,9 +174,9 @@ void loop()
 
     ledsAnimation();
 
-    if (bucketJoystick.update())
+    if (trackRightJoy.update())
     {
-        Serial.println(bucketJoystick.printDebug());
+        Serial.println(trackRightJoy.printDebug());
     }
 
     // Read joysticks positions and send data to Excavator
