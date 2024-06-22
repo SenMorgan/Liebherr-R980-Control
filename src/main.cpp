@@ -48,6 +48,30 @@ void manageStatusLed()
     }
 }
 
+void powerOnBoard()
+{
+    // Turn ON the board and potentiometers power
+    digitalWrite(BOARD_POWER, HIGH);
+    isBoardPowered = true;
+    Serial.println("Board powered ON");
+
+    // Calibrate joysticks after power ON
+    bucketJoystick.calibrate();
+}
+
+void powerOffBoard()
+{
+    // Turn OFF the board and potentiometers power
+    digitalWrite(BOARD_POWER, LOW);
+    isBoardPowered = false;
+    Serial.println("Board powered OFF");
+
+    // Turn off all LEDs
+    digitalWrite(LED_BUTTON_A, LOW);
+    digitalWrite(LED_BUTTON_B, LOW);
+    digitalWrite(LED_BUTTON_C, LOW);
+}
+
 void powerButtonCallback()
 {
     switch (powerBtn.action())
@@ -55,21 +79,7 @@ void powerButtonCallback()
         case EB_CLICK:
             Serial.println("Power button clicked");
             isBoardPowered = !isBoardPowered;
-            if (isBoardPowered)
-            {
-                // Turn ON the board and potentiometers power
-                digitalWrite(BOARD_POWER, HIGH);
-                Serial.println("Board powered ON");
-
-                // Calibrate joysticks after power ON
-                bucketJoystick.calibrate();
-            }
-            else
-            {
-                // Turn OFF the board and potentiometers power
-                digitalWrite(BOARD_POWER, LOW);
-                Serial.println("Board powered OFF");
-            }
+            isBoardPowered ? powerOnBoard() : powerOffBoard();
             break;
     }
 }
@@ -112,7 +122,7 @@ void ledsAnimation()
 void setup()
 {
     // Setup pins
-        pinMode(STATUS_LED, OUTPUT);
+    pinMode(STATUS_LED, OUTPUT);
     pinMode(BOARD_POWER, OUTPUT);
     pinMode(LED_BUTTON_A, OUTPUT);
     pinMode(LED_BUTTON_B, OUTPUT);
@@ -135,6 +145,9 @@ void setup()
 
     // Register callback for data received from Excavator
     registerDataRecvCallback(onDataFromExcavator);
+
+    // Power ON the board
+    powerOnBoard();
 
     // Finish initialization by logging message and turning off the built-in LED
     Serial.println(HOSTNAME + String(" initialized"));
