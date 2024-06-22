@@ -1,5 +1,5 @@
 /**
- * @file joysticks_control.cpp
+ * @file lever_control.cpp
  * @author SenMorgan https://github.com/SenMorgan
  * @date 2024-06-16
  *
@@ -7,16 +7,16 @@
  *
  */
 
-#include "joysticks_control.h"
+#include "lever_control.h"
 
 #include <Arduino.h>
 #include "driver/adc.h"
 
-Joystick::Joystick(uint8_t _pin,
-                   uint16_t _minAdcVal,
-                   uint16_t _maxAdcVal,
-                   bool _invert,
-                   uint16_t _deadZone)
+Lever::Lever(uint8_t _pin,
+             uint16_t _minAdcVal,
+             uint16_t _maxAdcVal,
+             bool _invert,
+             uint16_t _deadZone)
 {
     pin = _pin;
     minAdcVal = _minAdcVal;
@@ -35,12 +35,12 @@ Joystick::Joystick(uint8_t _pin,
     analogSetAttenuation(ADC_11db); // Set ADC attenuation to 11dB (0-3.6V range)
 }
 
-void Joystick::calibrate()
+void Lever::calibrate()
 {
     zeroPos = analogRead(pin);
 }
 
-bool Joystick::update()
+bool Lever::update()
 {
     uint32_t currentTime = millis();
 
@@ -56,22 +56,22 @@ bool Joystick::update()
     return false;
 }
 
-int Joystick::position() const
+int Lever::position() const
 {
     return pos;
 }
 
-uint16_t Joystick::value() const
+uint16_t Lever::value() const
 {
     return rawValue;
 }
 
-String Joystick::printDebug()
+String Lever::printDebug()
 {
     return "Pos: " + String(pos) + " Raw: " + String(rawValue) + " Zero: " + String(zeroPos);
 }
 
-uint16_t Joystick::readAndFilter()
+uint16_t Lever::readAndFilter()
 {
     static const uint8_t numReadings = 20; // Number of readings for the moving average
     static uint16_t readings[numReadings]; // Readings from the analog input

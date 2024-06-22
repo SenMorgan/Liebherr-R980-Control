@@ -5,28 +5,31 @@
 #include "constants.h"
 #include "data_structures.h"
 #include "esp_now_interface.h"
-#include "joysticks_control.h"
+#include "lever_control.h"
 #include "wifi_ota_manager.h"
 
-// Create a variable to store the received data
+// Structure to store the data received from the Excavator
 excavator_data_struct receivedData;
 
-// Create a variable to store the data that will be sent to the Excavator
+// Structure to store the data to be sent to the Excavator
 controller_data_struct dataToSend;
 
+// Buttons
 Button powerBtn(POWER_BUTTON, INPUT_PULLUP);
 
-Joystick boomJoy(BOOM_JOYSTICK, 10, 1010, true);
-Joystick stickJoy(STICK_JOYSTICK, 10, 900, true);
-Joystick bucketJoy(BUCKET_JOYSTICK, 65, 1010, true);
-Joystick swingJoy(SWING_JOYSTICK, 10, 930, false);
-Joystick trackLeftJoy(TRACK_LEFT_JOYSTICK, 10, 1010, true);
-Joystick trackRightJoy(TRACK_RIGHT_JOYSTICK, 10, 1010, true);
+// Levers
+Lever boomLaver(BOOM_LEVER, 10, 1010, true);
+Lever stickLaver(STICK_LEVER, 10, 900, true);
+Lever bucketLaver(BUCKET_LEVER, 65, 1010, true);
+Lever swingLaver(SWING_LEVER, 10, 930, false);
+Lever leftTravelLaver(LEFT_TRAVEL_LEVER, 10, 1010, true);
+Lever rightTravelLaver(RIGHT_TRAVEL_LEVER, 10, 1010, true);
 
+// Flags and variables
 volatile bool ledStatus = false;
 volatile uint32_t lastDataReceivedTime = 0;
 
-uint32_t lastJoystickReadTime = 0;
+uint32_t lastLeverReadTime = 0;
 
 bool isBoardPowered = false;
 
@@ -60,13 +63,13 @@ void powerOnBoard()
     isBoardPowered = true;
     Serial.println("Board powered ON");
 
-    // Calibrate joysticks after power ON
-    boomJoy.calibrate();
-    stickJoy.calibrate();
-    bucketJoy.calibrate();
-    swingJoy.calibrate();
-    trackLeftJoy.calibrate();
-    trackRightJoy.calibrate();
+    // Calibrate levers after power ON
+    boomLaver.calibrate();
+    stickLaver.calibrate();
+    bucketLaver.calibrate();
+    swingLaver.calibrate();
+    leftTravelLaver.calibrate();
+    rightTravelLaver.calibrate();
 }
 
 void powerOffBoard()
@@ -174,17 +177,16 @@ void loop()
 
     ledsAnimation();
 
-    if (trackRightJoy.update())
+    if (boomLaver.update())
     {
-        Serial.println(trackRightJoy.printDebug());
+        Serial.println(boomLaver.printDebug());
     }
 
-    // Read joysticks positions and send data to Excavator
-    if (millis() - lastJoystickReadTime > JOYSTICK_READ_INTERVAL)
+    // Read levers positions and send data to Excavator
+    if (millis() - lastLeverReadTime > LEVER_READ_INTERVAL)
     {
-        lastJoystickReadTime = millis();
+        lastLeverReadTime = millis();
 
-        // readJoysticksPositions(dataToSend);
         sendDataToExcavator(dataToSend);
     }
 }
