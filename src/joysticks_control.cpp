@@ -7,28 +7,114 @@
  *
  */
 
-#include <Arduino.h>
 #include "joysticks_control.h"
-#include "constants.h"
 
-void setJoysticksPins()
+#include <Arduino.h>
+#include "driver/adc.h"
+
+Joystick::Joystick(uint8_t _pin,
+                   uint16_t _minAdcVal,
+                   uint16_t _maxAdcVal,
+                   bool _invert,
+                   uint16_t _deadZone)
 {
-    // Set the joysticks pins as inputs
-    pinMode(BOOM_JOYSTICK, INPUT);
-    pinMode(DIPPER_JOYSTICK, INPUT);
-    pinMode(BUCKET_JOYSTICK, INPUT);
-    pinMode(SWING_JOYSTICK, INPUT);
-    pinMode(TRACK_LEFT_JOYSTICK, INPUT);
-    pinMode(TRACK_RIGHT_JOYSTICK, INPUT);
+    pin = _pin;
+    minAdcVal = _minAdcVal;
+    maxAdcVal = _maxAdcVal;
+    invert = _invert;
+    deadZone = _deadZone;
+    minOutput = -255;
+    maxOutput = +255;
+    pos = 0;
+    rawValue = 0;
+    updateInterval = 10;
+    lastUpdateTime = 0;
+
+    pinMode(pin, INPUT);
+    analogReadResolution(10);       // Set ADC resolution to 10 bits (0-1023 range)
+    analogSetAttenuation(ADC_11db); // Set ADC attenuation to 11dB (0-3.6V range)
 }
 
-void readJoysticksPositions(controller_data_struct &data)
+void Joystick::calibrate()
 {
-    // Read the analog values of the joysticks
-    data.boom = analogRead(BOOM_JOYSTICK);
-    data.dipper = analogRead(DIPPER_JOYSTICK);
-    data.bucket = analogRead(BUCKET_JOYSTICK);
-    data.swing = analogRead(SWING_JOYSTICK);
-    data.trackLeft = analogRead(TRACK_LEFT_JOYSTICK);
-    data.trackRight = analogRead(TRACK_RIGHT_JOYSTICK);
+    zeroPos = analogRead(pin);
+}
+
+bool Joystick::update()
+{
+    uint32_t currentTime = millis();
+
+    // Check if the update interval has passed
+    if (currentTime - lastUpdateTime > updateInterval)
+    {
+        // Update the last update time
+        lastUpdateTime = currentTime;
+        pos = readAndFilter();
+        return true;
+    }
+
+    return false;
+}
+
+int Joystick::position() const
+{
+    return pos;
+}
+
+uint16_t Joystick::value() const
+{
+    return rawValue;
+}
+
+String Joystick::printDebug()
+{
+    return "Pos: " + String(pos) + " Raw: " + String(rawValue) + " Zero: " + String(zeroPos);
+}
+
+uint16_t Joystick::readAndFilter()
+{
+    static const uint8_t numReadings = 20; // Number of readings for the moving average
+    static uint16_t readings[numReadings]; // Readings from the analog input
+    static uint8_t readIndex = 0;          // The index of the current reading
+    static uint32_t total = 0;             // The running total
+    static int calcRes = 0;                // The calculated result
+
+    // Subtract the last reading
+    total = total - readings[readIndex];
+    // Read from the sensor
+    rawValue = analogRead(pin);
+    readings[readIndex] = rawValue;
+    // Add the reading to the total
+    total = total + readings[readIndex];
+    // Advance to the next position in the array
+    readIndex = (readIndex + 1) % numReadings;
+    // Calculate the average
+    calcRes = total / numReadings;
+
+    // Adjust for center position and dead-zone
+    if (abs(calcRes - zeroPos) < deadZone)
+    {
+        calcRes = 0; // Within dead-zone
+    }
+    else
+    {
+        // Map the value considering the dead-zone
+        if (calcRes < zeroPos)
+            calcRes = map(calcRes, minAdcVal, zeroPos - deadZone, minOutput, 0);
+        else
+            calcRes = map(calcRes, zeroPos + deadZone, maxAdcVal, 0, maxOutput);
+
+        // Constrain the value to the output range
+        calcRes = constrain(calcRes, minOutput, maxOutput);
+
+        // Use exponential function to smooth out the output
+        calcRes = pow(calcRes, 3) / pow(maxOutput, 2);
+
+        // Invert the value if needed
+        if (invert)
+            calcRes = -calcRes;
+    }
+
+    // Return result
+    return calcRes;
 }

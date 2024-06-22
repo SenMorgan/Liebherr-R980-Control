@@ -1,7 +1,6 @@
 #include <WiFi.h>
 #include <Wire.h>
 #include <EncButton.h>
-#include <GyverJoy.h>
 
 #include "constants.h"
 #include "data_structures.h"
@@ -17,7 +16,7 @@ controller_data_struct dataToSend;
 
 Button powerBtn(POWER_BUTTON, INPUT_PULLUP);
 
-GyverJoy bucketJoystick(BUCKET_JOYSTICK);
+Joystick bucketJoystick(BUCKET_JOYSTICK, 5, 900, true, 30);
 
 volatile bool ledStatus = false;
 volatile uint32_t lastDataReceivedTime = 0;
@@ -113,8 +112,7 @@ void ledsAnimation()
 void setup()
 {
     // Setup pins
-    setJoysticksPins();
-    pinMode(STATUS_LED, OUTPUT);
+        pinMode(STATUS_LED, OUTPUT);
     pinMode(BOARD_POWER, OUTPUT);
     pinMode(LED_BUTTON_A, OUTPUT);
     pinMode(LED_BUTTON_B, OUTPUT);
@@ -124,12 +122,6 @@ void setup()
     digitalWrite(STATUS_LED, HIGH);
 
     powerBtn.attach(powerButtonCallback);
-
-    // Change ADC resolution to 10 bits for GyverJoy library
-    analogReadResolution(10);
-    bucketJoystick.invert(true);
-    bucketJoystick.deadzone(30);
-    bucketJoystick.exponent(GJ_SQUARE);
 
     // Init Serial Monitor
     Serial.begin(115200);
@@ -159,9 +151,9 @@ void loop()
 
     ledsAnimation();
 
-    if (bucketJoystick.tick())
+    if (bucketJoystick.update())
     {
-        Serial.println(bucketJoystick.value());
+        Serial.println(bucketJoystick.printDebug());
     }
 
     // Read joysticks positions and send data to Excavator
@@ -169,7 +161,7 @@ void loop()
     {
         lastJoystickReadTime = millis();
 
-        readJoysticksPositions(dataToSend);
+        // readJoysticksPositions(dataToSend);
         sendDataToExcavator(dataToSend);
     }
 }
