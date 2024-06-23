@@ -1,7 +1,7 @@
 #include <WiFi.h>
 #include <Wire.h>
-#include <EncButton.h>
 
+#include "buttons_control.h"
 #include "constants.h"
 #include "data_structures.h"
 #include "esp_now_interface.h"
@@ -14,17 +14,6 @@ excavator_data_struct receivedData;
 
 // Structure to store the data to be sent to the Excavator
 controller_data_struct dataToSend;
-
-// Buttons
-Button powerBtn(POWER_BUTTON, INPUT_PULLUP);
-Button mainLightsBtn(MAIN_LIGHTS_BUTTON, INPUT_PULLUP);
-Button centerSwingBtn(CENTER_SWING_BUTTON, INPUT_PULLUP);
-Button scanBtn(SCAN_BUTTON, INPUT_PULLUP);
-Button opt1Btn(OPT_1_BUTTON, INPUT_PULLUP);
-Button opt2Btn(OPT_2_BUTTON, INPUT_PULLUP);
-Button aBtn(A_BUTTON, INPUT_PULLUP);
-Button bBtn(B_BUTTON, INPUT_PULLUP);
-Button cBtn(C_BUTTON, INPUT_PULLUP);
 
 // Levers
 Lever boomLever(BOOM_LEVER, 10, 1010, true);
@@ -100,23 +89,11 @@ void powerOffBoard()
 // Callback function to handle power button press
 void powerButtonCallback()
 {
-    switch (powerBtn.action())
+    if (powerBtn.action() == EB_CLICK)
     {
-        case EB_CLICK:
-            Serial.println("Power button clicked");
-            isBoardPowered = !isBoardPowered;
-            isBoardPowered ? powerOnBoard() : powerOffBoard();
-            break;
-    }
-}
-
-void scanButtonCallback()
-{
-    switch (scanBtn.action())
-    {
-        case EB_CLICK:
-            Serial.println("Scan button clicked");
-            break;
+        Serial.println("Power button clicked");
+        isBoardPowered = !isBoardPowered;
+        isBoardPowered ? powerOnBoard() : powerOffBoard();
     }
 }
 
@@ -168,8 +145,10 @@ void setup()
     digitalWrite(STATUS_LED, HIGH);
 
     // setupPowerManager(powerBtn);
+
+    // Init buttons
+    initButtons();
     powerBtn.attach(powerButtonCallback);
-    scanBtn.attach(scanButtonCallback);
 
     // Init Serial Monitor
     Serial.begin(115200);
@@ -198,7 +177,8 @@ void loop()
 
     manageStatusLed();
 
-    powerBtn.tick();
+    // Handle buttons
+    tickButtons();
 
     ledsAnimation();
 
