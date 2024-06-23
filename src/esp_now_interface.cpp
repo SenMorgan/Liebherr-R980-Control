@@ -20,6 +20,9 @@ uint8_t excavatorMac[] = {EXCAVATOR_MAC};
 // Create a structure to store the peer information
 esp_now_peer_info_t peerInfo;
 
+// Variable to store a callback when data were received
+esp_now_recv_cb_t onDataReceivedCallback = NULL;
+
 // Callback when data is sent
 void _onDataSent(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
@@ -28,9 +31,28 @@ void _onDataSent(const uint8_t *mac_addr, esp_now_send_status_t status)
         Serial.printf("Data was not received by the Excavator\n");
 }
 
-void registerDataRecvCallback(esp_now_recv_cb_t callback)
+void setupDataRecvCallback(esp_now_recv_cb_t callback)
 {
-    esp_now_register_recv_cb(callback);
+    onDataReceivedCallback = callback;
+}
+
+void setupPeer()
+{
+    // Check if the peer has already been set
+    static boolean peerSet = false;
+
+    if (peerSet)
+    {
+        // Peer has already been set - return
+        return;
+    }
+
+    // Setup the peer
+    memcpy(peerInfo.peer_addr, excavatorMac, 6);
+    peerInfo.channel = 0;
+    peerInfo.encrypt = false;
+
+    peerSet = true;
 }
 
 void initEspNow()
@@ -42,10 +64,8 @@ void initEspNow()
         return;
     }
 
-    // Setup the peer
-    memcpy(peerInfo.peer_addr, excavatorMac, 6);
-    peerInfo.channel = 0;
-    peerInfo.encrypt = false;
+    // Set up the peer if it hasn't been set up yet
+    setupPeer();
 
     // Add the peer
     if (esp_now_add_peer(&peerInfo) != ESP_OK)
@@ -56,14 +76,50 @@ void initEspNow()
 
     // Register for a callback function that will be called when data is sent
     esp_now_register_send_cb(_onDataSent);
+
+    esp_now_register_recv_cb(onDataReceivedCallback);
 }
 
 void sendDataToExcavator(const controller_data_struct &data)
 {
-    // Send the data
+#define NO_MEM_RETRY_INTERVAL 1000
+    static unsigned long lastSendTime = 0;
+    static bool awaitingRetry = false;
+    static bool wasMemErrorLastTime = false;
+
+    // Continue only if WiFi interface is in valid mode
+    if (WiFi.getMode() != WIFI_AP_STA && WiFi.getMode() != WIFI_AP)
+        return;
+
+    // Check if we are waiting to retry and if the wait time has elapsed
+    if (awaitingRetry && millis() - lastSendTime < NO_MEM_RETRY_INTERVAL)
+        return; // Exit the function early if we are still waiting to retry
+
+    // Attempt to send the data
     esp_err_t result = esp_now_send(excavatorMac, (uint8_t *)&data, sizeof(data));
 
-    // Print error message if something went wrong
-    if (result != ESP_OK)
-        Serial.printf("Error sending data: %s\n", esp_err_to_name(result));
+    // Handle the result of the send attempt
+    if (result == ESP_ERR_ESPNOW_NO_MEM)
+    {
+        if (wasMemErrorLastTime)
+        {
+            // Log the error if this is the second consecutive ESP_ERR_ESPNOW_NO_MEM
+            Serial.printf("Error sending data after retry: %s\n", esp_err_to_name(result));
+        }
+        // Set up for a retry
+        lastSendTime = millis();
+        awaitingRetry = true;
+        wasMemErrorLastTime = true;
+    }
+    else
+    {
+        // If the send was successful or failed for a reason other than ESP_ERR_ESPNOW_NO_MEM, reset retry state
+        awaitingRetry = false;
+        wasMemErrorLastTime = false;
+        if (result != ESP_OK)
+        {
+            // Log the error if it's not ESP_OK and not ESP_ERR_ESPNOW_NO_MEM
+            Serial.printf("Error sending data: %s\n", esp_err_to_name(result));
+        }
+    }
 }

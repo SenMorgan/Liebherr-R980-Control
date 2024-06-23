@@ -22,6 +22,7 @@ private:
     uint16_t deadZone;       // Dead zone value
     bool invert;             // Invert the lever value
     int16_t pos;             // Current lever calculated position
+    int16_t lastPos;         // Last lever calculated position
     uint16_t rawValue;       // Current lever raw value
     int16_t minOutput;       // Minimum output value
     int16_t maxOutput;       // Maximum output value
@@ -72,6 +73,12 @@ public:
      * @return The raw value of the lever.
      */
     uint16_t value() const;
+
+    /**
+     * @brief Returns true if the lever position has changed after last reading.
+     * @return True if the lever position has changed.
+     */
+    bool changed();
 
     /**
      * @brief Returns a string with the lever debug information.

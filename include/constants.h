@@ -16,6 +16,11 @@
 // Period of status LED blink when data is received in milliseconds
 #define STATUS_LED_BLINK_PERIOD 10
 
+// Period of user inactivity to read the battery voltage in milliseconds (will disable Wi-Fi for a few seconds)
+#define INACTIVITY_PERIOD_FOR_BATTERY_READ 5000
+// Period between battery voltage readings in milliseconds
+#define BATTERY_READ_INTERVAL 60000
+
 // Communication pins
 #define I2C_SDA 21
 #define I2C_SCL 22

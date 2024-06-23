@@ -11,6 +11,7 @@
 #define WIFI_OTA_MANAGER_H
 
 void setupWiFi();
+void enableWiFi();
 void setupOTA();
 void handleOTA();
 

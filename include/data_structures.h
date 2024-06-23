@@ -29,7 +29,7 @@ typedef struct excavator_data_struct
 {
     uint16_t uptime;  // Excavator controller uptime
     uint16_t battery; // Excavator battery voltage
-    int16_t cpuTemp;   // Excavator controller temperature
+    int16_t cpuTemp;  // Excavator controller temperature
 } excavator_data_struct;
 
 #endif // DATA_STRUCTURES_H

@@ -12,6 +12,14 @@
 #include <ArduinoOTA.h>
 
 #include "constants.h"
+#include "esp_now_interface.h"
+
+// Callback function to handle WiFi ready event
+void onWiFiReady(WiFiEvent_t event, WiFiEventInfo_t info)
+{
+    Serial.println("WiFi interface ready");
+    initEspNow();
+}
 
 // Callback function to handle WiFi connection event
 void onWiFiConnected(WiFiEvent_t event, WiFiEventInfo_t info)
@@ -35,6 +43,7 @@ void onWiFiDisconnected(WiFiEvent_t event, WiFiEventInfo_t info)
 void setupWiFi()
 {
     // Register WiFi event handlers
+    WiFi.onEvent(onWiFiReady, ARDUINO_EVENT_WIFI_READY);
     WiFi.onEvent(onWiFiConnected, ARDUINO_EVENT_WIFI_STA_CONNECTED);
     WiFi.onEvent(onWiFiGotIP, ARDUINO_EVENT_WIFI_STA_GOT_IP);
     WiFi.onEvent(onWiFiDisconnected, ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
@@ -43,6 +52,11 @@ void setupWiFi()
     WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
     WiFi.hostname(HOSTNAME);
 
+    enableWiFi();
+}
+
+void enableWiFi()
+{
     // Set device as a Wi-Fi Station
     WiFi.mode(WIFI_AP_STA);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);

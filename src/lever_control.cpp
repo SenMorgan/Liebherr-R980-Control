@@ -66,6 +66,16 @@ uint16_t Lever::value() const
     return rawValue;
 }
 
+bool Lever::changed()
+{
+    if (pos != lastPos)
+    {
+        lastPos = pos; // Update lastPosition for the next check
+        return true;
+    }
+    return false;
+}
+
 String Lever::printDebug()
 {
     return "Pos: " + String(pos) + " Raw: " + String(rawValue) + " Zero: " + String(zeroPos);

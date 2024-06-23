@@ -15,7 +15,7 @@
 #include "data_structures.h"
 
 void initEspNow();
-void registerDataRecvCallback(esp_now_recv_cb_t callback);
+void setupDataRecvCallback(esp_now_recv_cb_t callback);
 void sendDataToExcavator(const controller_data_struct &data);
 
 #endif // ESP_NOW_INTERFACE_H

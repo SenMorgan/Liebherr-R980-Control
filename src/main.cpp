@@ -31,6 +31,9 @@ uint32_t lastLeverReadTime = 0;
 
 bool isBoardPowered = false;
 
+// Variable to track the last user activity time
+volatile uint32_t lastUserActivityTime = millis();
+
 // Callback when data from Excavator received
 void onDataFromExcavator(const uint8_t *mac, const uint8_t *incomingData, int len)
 {
@@ -89,6 +92,9 @@ void powerOffBoard()
 // Callback function to handle power button press
 void powerButtonCallback()
 {
+    // Update the last user activity time
+    lastUserActivityTime = millis();
+
     if (powerBtn.action() == EB_CLICK)
     {
         Serial.println("Power button clicked");
@@ -141,27 +147,26 @@ void setup()
     pinMode(LED_BUTTON_B, OUTPUT);
     pinMode(LED_BUTTON_C, OUTPUT);
 
-    // Turn on the built-in LED
+    // Turn on the built-in LED to indicate initialization
     digitalWrite(STATUS_LED, HIGH);
 
-    // setupPowerManager(powerBtn);
+    // Init Serial Monitor
+    Serial.begin(115200);
+
+    // Setup power manager and read battery voltage during startup
+    setupPowerManager(powerBtn);
+    dataToSend.battery = readBatteryVoltage(false);
 
     // Init buttons
     initButtons();
     powerBtn.attach(powerButtonCallback);
 
-    // Init Serial Monitor
-    Serial.begin(115200);
+    // Setup callback for data received from Excavator
+    setupDataRecvCallback(onDataFromExcavator);
 
     // Init Wi-Fi and OTA
     setupWiFi();
     setupOTA();
-
-    // Init ESP-NOW
-    initEspNow();
-
-    // Register callback for data received from Excavator
-    registerDataRecvCallback(onDataFromExcavator);
 
     // Power ON the board
     powerOnBoard();
@@ -189,6 +194,14 @@ void loop()
     swingLever.update();
     leftTravelLever.update();
     rightTravelLever.update();
+
+    // Check if any lever's position has changed
+    if (boomLever.changed() || bucketLever.changed() ||
+        stickLever.changed() || swingLever.changed() ||
+        leftTravelLever.changed() || rightTravelLever.changed())
+    {
+        lastUserActivityTime = millis(); // Update last user activity time
+    }
 
     // Read levers positions and send data to Excavator
     if (millis() - lastLeverReadTime > SEND_DATA_INTERVAL)
@@ -218,5 +231,9 @@ void loop()
         sendDataToExcavator(dataToSend);
     }
 
-    // dataToSend.battery = readBatteryVoltage();
+    // Only read battery voltage after a period of inactivity to save power and reduce unnecessary readings
+    if (millis() - lastUserActivityTime > INACTIVITY_PERIOD_FOR_BATTERY_READ)
+    {
+        dataToSend.battery = readBatteryVoltage();
+    }
 }
