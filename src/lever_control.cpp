@@ -56,7 +56,7 @@ bool Lever::update()
     return false;
 }
 
-int Lever::position() const
+int16_t Lever::position() const
 {
     return pos;
 }
@@ -71,14 +71,8 @@ String Lever::printDebug()
     return "Pos: " + String(pos) + " Raw: " + String(rawValue) + " Zero: " + String(zeroPos);
 }
 
-uint16_t Lever::readAndFilter()
+int16_t Lever::readAndFilter()
 {
-    static const uint8_t numReadings = 20; // Number of readings for the moving average
-    static uint16_t readings[numReadings]; // Readings from the analog input
-    static uint8_t readIndex = 0;          // The index of the current reading
-    static uint32_t total = 0;             // The running total
-    static int calcRes = 0;                // The calculated result
-
     // Subtract the last reading
     total = total - readings[readIndex];
     // Read from the sensor

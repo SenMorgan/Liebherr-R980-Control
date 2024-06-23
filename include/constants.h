@@ -10,21 +10,35 @@
 #ifndef _CONSTANTS_H
 #define _CONSTANTS_H
 
-// Period between lever readings in milliseconds
-#define LEVER_READ_INTERVAL 1000
+// Period between sending data in milliseconds
+#define SEND_DATA_INTERVAL 200
 
 // Period of status LED blink when data is received in milliseconds
 #define STATUS_LED_BLINK_PERIOD 10
 
-// IO pins
-#define STATUS_LED   2
-#define POWER_BUTTON 16
-#define BOARD_POWER  27
+// Communication pins
+#define I2C_SDA 21
+#define I2C_SCL 22
+
+// Output pins
+#define BOARD_POWER 14
 
 // LEDs
-#define LED_BUTTON_A 14
+#define STATUS_LED   2
+#define LED_BUTTON_A 27
 #define LED_BUTTON_B 12
 #define LED_BUTTON_C 13
+
+// Buttons
+#define POWER_BUTTON        16
+#define MAIN_LIGHTS_BUTTON  17
+#define CENTER_SWING_BUTTON 18
+#define SCAN_BUTTON         5
+#define OPT_1_BUTTON        19
+#define OPT_2_BUTTON        23
+#define A_BUTTON            25
+#define B_BUTTON            26
+#define C_BUTTON            15
 
 // Lever analog inputs - only ADC1 pins, cause ADC2 is used by Wi-Fi
 #define BOOM_LEVER         32
@@ -33,5 +47,8 @@
 #define SWING_LEVER        34
 #define LEFT_TRAVEL_LEVER  36
 #define RIGHT_TRAVEL_LEVER 39
+
+// Battery voltage divider (ADC2 - Wi-Fi must be disabled during readings)
+#define BATTERY_VOLTAGE_PIN 4
 
 #endif // _CONSTANTS_H

@@ -15,12 +15,13 @@
 // The structure type of the data that will be sent over ESP-NOW from the Controller to the Excavator
 typedef struct controller_data_struct
 {
-    int boom;        // Position of the boom lever
-    int dipper;      // Position of the dipper lever
-    int bucket;      // Position of the bucket lever
-    int swing;       // Position of the swing lever
-    int travelLeft;  // Position of the left travel lever
-    int travelRight; // Position of the right travel lever
+    int16_t boomPos;        // Position of the boom lever
+    int16_t bucketPos;      // Position of the bucket lever
+    int16_t stickPos;       // Position of the stick lever
+    int16_t swingPos;       // Position of the swing lever
+    int16_t leftTravelPos;  // Position of the left travel lever
+    int16_t rightTravelPos; // Position of the right travel lever
+    uint16_t battery;       // Controller battery voltage
 } controller_data_struct;
 
 // The structure type of the data that will be sent over ESP-NOW from the Excavator to the Controller
@@ -28,7 +29,7 @@ typedef struct excavator_data_struct
 {
     uint16_t uptime;  // Excavator controller uptime
     uint16_t battery; // Excavator battery voltage
-    float cpuTemp;    // Excavator controller temperature
+    int16_t cpuTemp;   // Excavator controller temperature
 } excavator_data_struct;
 
 #endif // DATA_STRUCTURES_H

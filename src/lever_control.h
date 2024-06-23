@@ -22,17 +22,23 @@ private:
     uint16_t deadZone;       // Dead zone value
     bool invert;             // Invert the lever value
     int16_t pos;             // Current lever calculated position
-    int16_t rawValue;        // Current lever raw value
+    uint16_t rawValue;       // Current lever raw value
     int16_t minOutput;       // Minimum output value
     int16_t maxOutput;       // Maximum output value
     uint16_t updateInterval; // Period between readings in milliseconds
     uint32_t lastUpdateTime; // Last reading time in milliseconds
 
+    uint8_t numReadings = 20; // Number of readings to average
+    uint16_t readings[20];    // Readings buffer (size must be the same as numReadings)
+    uint8_t readIndex = 0;    // Index of the current reading
+    uint32_t total = 0;       // Running total
+    int16_t calcRes = 0;      // Calculated result
+
     /**
      * @brief Reads the lever input and filters the readings using a moving average algorithm and exponential smoothing.
      * @return The filtered lever value.
      */
-    uint16_t readAndFilter();
+    int16_t readAndFilter();
 
 public:
     /**
@@ -59,7 +65,7 @@ public:
      * @brief Returns the calculated, mapped and filtered lever position.
      * @return The current lever position.
      */
-    int position() const;
+    int16_t position() const;
 
     /**
      * @brief Returns last raw ADC value of the lever.

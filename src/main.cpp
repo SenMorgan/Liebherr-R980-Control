@@ -6,6 +6,7 @@
 #include "data_structures.h"
 #include "esp_now_interface.h"
 #include "lever_control.h"
+#include "power_manager.h"
 #include "wifi_ota_manager.h"
 
 // Structure to store the data received from the Excavator
@@ -16,14 +17,22 @@ controller_data_struct dataToSend;
 
 // Buttons
 Button powerBtn(POWER_BUTTON, INPUT_PULLUP);
+Button mainLightsBtn(MAIN_LIGHTS_BUTTON, INPUT_PULLUP);
+Button centerSwingBtn(CENTER_SWING_BUTTON, INPUT_PULLUP);
+Button scanBtn(SCAN_BUTTON, INPUT_PULLUP);
+Button opt1Btn(OPT_1_BUTTON, INPUT_PULLUP);
+Button opt2Btn(OPT_2_BUTTON, INPUT_PULLUP);
+Button aBtn(A_BUTTON, INPUT_PULLUP);
+Button bBtn(B_BUTTON, INPUT_PULLUP);
+Button cBtn(C_BUTTON, INPUT_PULLUP);
 
 // Levers
-Lever boomLaver(BOOM_LEVER, 10, 1010, true);
-Lever stickLaver(STICK_LEVER, 10, 900, true);
-Lever bucketLaver(BUCKET_LEVER, 65, 1010, true);
-Lever swingLaver(SWING_LEVER, 10, 930, false);
-Lever leftTravelLaver(LEFT_TRAVEL_LEVER, 10, 1010, true);
-Lever rightTravelLaver(RIGHT_TRAVEL_LEVER, 10, 1010, true);
+Lever boomLever(BOOM_LEVER, 10, 1010, true);
+Lever bucketLever(BUCKET_LEVER, 65, 1010, true);
+Lever stickLever(STICK_LEVER, 10, 900, true);
+Lever swingLever(SWING_LEVER, 10, 930, false);
+Lever leftTravelLever(LEFT_TRAVEL_LEVER, 10, 1010, true);
+Lever rightTravelLever(RIGHT_TRAVEL_LEVER, 10, 1010, true);
 
 // Flags and variables
 volatile bool ledStatus = false;
@@ -38,7 +47,7 @@ void onDataFromExcavator(const uint8_t *mac, const uint8_t *incomingData, int le
 {
     memcpy(&receivedData, incomingData, sizeof(receivedData));
     // Serial.printf("\nReceived from Excavator:\nUptime: %u\nBattery: %u\nCPU Temp: %.2f °C\n",
-    //               receivedData.uptime, receivedData.battery, receivedData.cpuTemp);
+    //               receivedData.uptime, receivedData.battery, (float)receivedData.cpuTemp / 100.0);
 
     // Turn on the built-in LED, set flag and save the last time data was received
     digitalWrite(STATUS_LED, HIGH);
@@ -63,13 +72,16 @@ void powerOnBoard()
     isBoardPowered = true;
     Serial.println("Board powered ON");
 
+    // Some delay to stabilize the power
+    delay(100);
+
     // Calibrate levers after power ON
-    boomLaver.calibrate();
-    stickLaver.calibrate();
-    bucketLaver.calibrate();
-    swingLaver.calibrate();
-    leftTravelLaver.calibrate();
-    rightTravelLaver.calibrate();
+    boomLever.calibrate();
+    bucketLever.calibrate();
+    stickLever.calibrate();
+    swingLever.calibrate();
+    leftTravelLever.calibrate();
+    rightTravelLever.calibrate();
 }
 
 void powerOffBoard()
@@ -85,6 +97,7 @@ void powerOffBoard()
     digitalWrite(LED_BUTTON_C, LOW);
 }
 
+// Callback function to handle power button press
 void powerButtonCallback()
 {
     switch (powerBtn.action())
@@ -93,6 +106,16 @@ void powerButtonCallback()
             Serial.println("Power button clicked");
             isBoardPowered = !isBoardPowered;
             isBoardPowered ? powerOnBoard() : powerOffBoard();
+            break;
+    }
+}
+
+void scanButtonCallback()
+{
+    switch (scanBtn.action())
+    {
+        case EB_CLICK:
+            Serial.println("Scan button clicked");
             break;
     }
 }
@@ -144,7 +167,9 @@ void setup()
     // Turn on the built-in LED
     digitalWrite(STATUS_LED, HIGH);
 
+    // setupPowerManager(powerBtn);
     powerBtn.attach(powerButtonCallback);
+    scanBtn.attach(scanButtonCallback);
 
     // Init Serial Monitor
     Serial.begin(115200);
@@ -177,16 +202,41 @@ void loop()
 
     ledsAnimation();
 
-    if (boomLaver.update())
-    {
-        Serial.println(boomLaver.printDebug());
-    }
+    // Update all levers
+    boomLever.update();
+    bucketLever.update();
+    stickLever.update();
+    swingLever.update();
+    leftTravelLever.update();
+    rightTravelLever.update();
 
     // Read levers positions and send data to Excavator
-    if (millis() - lastLeverReadTime > LEVER_READ_INTERVAL)
+    if (millis() - lastLeverReadTime > SEND_DATA_INTERVAL)
     {
         lastLeverReadTime = millis();
 
+        if (isBoardPowered)
+        {
+            dataToSend.boomPos = boomLever.position();
+            dataToSend.bucketPos = bucketLever.position();
+            dataToSend.stickPos = stickLever.position();
+            dataToSend.swingPos = swingLever.position();
+            dataToSend.leftTravelPos = leftTravelLever.position();
+            dataToSend.rightTravelPos = rightTravelLever.position();
+        }
+        else
+        {
+            // Zero all levers if the board is powered OFF
+            dataToSend.boomPos = 0;
+            dataToSend.bucketPos = 0;
+            dataToSend.stickPos = 0;
+            dataToSend.swingPos = 0;
+            dataToSend.leftTravelPos = 0;
+            dataToSend.rightTravelPos = 0;
+        }
+
         sendDataToExcavator(dataToSend);
     }
+
+    // dataToSend.battery = readBatteryVoltage();
 }
