@@ -11,7 +11,7 @@
 #define _CONSTANTS_H
 
 // Period between sending data in milliseconds
-#define SEND_DATA_INTERVAL 200
+#define SEND_DATA_INTERVAL 50
 
 // Period of status LED blink when data is received in milliseconds
 #define STATUS_LED_BLINK_PERIOD 10
