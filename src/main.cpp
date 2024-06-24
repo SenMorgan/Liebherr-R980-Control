@@ -43,10 +43,20 @@ void onDataFromExcavator(const uint8_t *mac, const uint8_t *incomingData, int le
     // Serial.printf("\nReceived from Excavator:\nUptime: %u\nBattery: %u\nCPU Temp: %.2f °C\n",
     //               receivedData.uptime, receivedData.battery, (float)receivedData.cpuTemp / 100.0);
 
-    // Turn on the built-in LED, set flag and save the last time data was received
-    digitalWrite(STATUS_LED, HIGH);
+    // Turn ON the LED to indicate data received
+    digitalWrite(LED_BUTTON_C, HIGH);
     ledStatus = true;
     lastDataReceivedTime = millis();
+}
+
+void manageRxLed()
+{
+    // Turn off the built-in LED after some time if was turned on
+    if (ledStatus && millis() - lastDataReceivedTime > RX_LED_BLINK_PERIOD)
+    {
+        digitalWrite(LED_BUTTON_C, LOW);
+        ledStatus = false;
+    }
 }
 
 void zeroLeversPositions()
@@ -89,16 +99,6 @@ void manageLevers()
             dataToSend.leverPositions[i] = isBoardPowered ? levers[i].position() : 0;
 
         sendDataToExcavator(dataToSend);
-    }
-}
-
-void manageStatusLed()
-{
-    // Turn off the built-in LED after some time if was turned on
-    if (ledStatus && millis() - lastDataReceivedTime > STATUS_LED_BLINK_PERIOD)
-    {
-        digitalWrite(STATUS_LED, LOW);
-        ledStatus = false;
     }
 }
 
@@ -153,41 +153,6 @@ void powerButtonCallback()
     }
 }
 
-void ledsAnimation()
-{
-#define BLINK_INTERVAL 250
-
-    static uint32_t lastBlinkTime = 0;
-    static uint8_t currentLed = LED_BUTTON_C; // Start with LED A
-
-    if (isBoardPowered && millis() - lastBlinkTime >= BLINK_INTERVAL)
-    {
-        lastBlinkTime = millis(); // Update the last blink time
-
-        // Turn off all LEDs
-        digitalWrite(LED_BUTTON_A, LOW);
-        digitalWrite(LED_BUTTON_B, LOW);
-        digitalWrite(LED_BUTTON_C, LOW);
-
-        // Turn on the next LED
-        digitalWrite(currentLed, HIGH);
-
-        // Move to the next LED in sequence (from C to A)
-        switch (currentLed)
-        {
-            case LED_BUTTON_A:
-                currentLed = LED_BUTTON_C;
-                break;
-            case LED_BUTTON_B:
-                currentLed = LED_BUTTON_A;
-                break;
-            case LED_BUTTON_C:
-                currentLed = LED_BUTTON_B;
-                break;
-        }
-    }
-}
-
 void setup()
 {
     // Setup pins
@@ -230,13 +195,13 @@ void loop()
 {
     handleOTA();
 
-    manageStatusLed();
+    // Disable Rx LED after a certain period
+    manageRxLed();
 
     // Handle buttons
     tickButtons();
 
-    ledsAnimation();
-
+    // Get the lever positions and send the data to the Excavator
     manageLevers();
 
     // Read battery voltage only after a period of inactivity not to disturb the user by disabling the Wi-Fi

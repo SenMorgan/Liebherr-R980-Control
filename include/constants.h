@@ -15,7 +15,7 @@
 #define SEND_DATA_MAX_INTERVAL 10000
 
 // Period of status LED blink when data is received in milliseconds
-#define STATUS_LED_BLINK_PERIOD 10
+#define RX_LED_BLINK_PERIOD 10
 
 // Period of user inactivity to read the battery voltage in milliseconds (will disable Wi-Fi for a few seconds)
 #define INACTIVITY_PERIOD_FOR_BATTERY_READ 5000
