@@ -8,7 +8,6 @@
  */
 
 #include "power_manager.h"
-#include <WiFi.h>
 
 #include "constants.h"
 #include "wifi_ota_manager.h"
@@ -56,11 +55,20 @@ uint16_t readBatteryVoltage(bool reEnableWiFi)
     {
         lastBatteryReadTime = millis();
 
+        // If reenableWiFi is true, disable the WiFi before reading the battery voltage
+        if (reEnableWiFi)
+        {
+            disableWiFi();
+        }
+        // If the WiFi is enabled and reenableWiFi is false, print an error message and return
+        else if (isWiFiEnabled())
+        {
+            Serial.println("WiFi must be disabled to read the battery voltage!");
+            return 0;
+        }
+
         // Reset the value so we can detect if there was an error reading the battery voltage
         battMv = 0;
-
-        // Disable the WiFi so we can read the battery voltage from the ADC2
-        WiFi.mode(WIFI_OFF);
 
         // Read the battery voltage
         battMv = getAveragedBattVoltage();

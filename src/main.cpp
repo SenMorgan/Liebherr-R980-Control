@@ -49,58 +49,17 @@ void onDataFromExcavator(const uint8_t *mac, const uint8_t *incomingData, int le
     lastDataReceivedTime = millis();
 }
 
-void manageStatusLed()
+void zeroLeversPositions()
 {
-    // Turn off the built-in LED after some time if was turned on
-    if (ledStatus && millis() - lastDataReceivedTime > STATUS_LED_BLINK_PERIOD)
-    {
-        digitalWrite(STATUS_LED, LOW);
-        ledStatus = false;
-    }
-}
+    // Set all levers positions to 0
+    for (uint8_t i = 0; i < LEVERS_COUNT; i++)
+        dataToSend.leverPositions[i] = 0;
 
-void powerOnBoard()
-{
-    // Turn ON the board and potentiometers power
-    digitalWrite(BOARD_POWER, HIGH);
-    isBoardPowered = true;
-    Serial.println("Board powered ON");
+    // Send the data to the Excavator
+    sendDataToExcavator(dataToSend);
 
-    // Some delay to stabilize the power
+    // Delay to allow the ESP-NOW to send the data
     delay(100);
-
-    // Calibrate all levers after power ON
-    for (auto &lever : levers)
-    {
-        lever.calibrate();
-    }
-}
-
-void powerOffBoard()
-{
-    // Turn OFF the board and potentiometers power
-    digitalWrite(BOARD_POWER, LOW);
-    isBoardPowered = false;
-    Serial.println("Board powered OFF");
-
-    // Turn off all LEDs
-    digitalWrite(LED_BUTTON_A, LOW);
-    digitalWrite(LED_BUTTON_B, LOW);
-    digitalWrite(LED_BUTTON_C, LOW);
-}
-
-// Callback function to handle power button press
-void powerButtonCallback()
-{
-    // Update the last user activity time
-    lastUserActivityTime = millis();
-
-    if (powerBtn.action() == EB_CLICK)
-    {
-        Serial.println("Power button clicked");
-        isBoardPowered = !isBoardPowered;
-        isBoardPowered ? powerOnBoard() : powerOffBoard();
-    }
 }
 
 void manageLevers()
@@ -130,6 +89,67 @@ void manageLevers()
             dataToSend.leverPositions[i] = isBoardPowered ? levers[i].position() : 0;
 
         sendDataToExcavator(dataToSend);
+    }
+}
+
+void manageStatusLed()
+{
+    // Turn off the built-in LED after some time if was turned on
+    if (ledStatus && millis() - lastDataReceivedTime > STATUS_LED_BLINK_PERIOD)
+    {
+        digitalWrite(STATUS_LED, LOW);
+        ledStatus = false;
+    }
+}
+
+// Callback function to handle power button press
+void powerButtonCallback()
+{
+    // Update the last user activity time
+    lastUserActivityTime = millis();
+
+    if (powerBtn.action() == EB_CLICK)
+    {
+        Serial.println("Power button clicked");
+        isBoardPowered = !isBoardPowered;
+        if (isBoardPowered)
+        {
+            Serial.println("Board powered ON");
+
+            // Turn ON the board and potentiometers power
+            digitalWrite(BOARD_POWER, HIGH);
+
+            // Some delay to stabilize the power
+            delay(100);
+
+            // Calibrate all levers after power ON
+            for (auto &lever : levers)
+                lever.calibrate();
+
+            // Enable Wi-Fi and power ON the board
+            enableWiFi();
+        }
+        else
+        {
+            Serial.println("Board powered OFF");
+
+            // Zero all levers positions
+            zeroLeversPositions();
+
+            // Disable Wi-Fi and power OFF the board
+            disableWiFi();
+
+            // Turn OFF the board and potentiometers power
+            digitalWrite(BOARD_POWER, LOW);
+
+            // Turn off all LEDs
+            digitalWrite(LED_BUTTON_A, LOW);
+            digitalWrite(LED_BUTTON_B, LOW);
+            digitalWrite(LED_BUTTON_C, LOW);
+
+            // It is a good time to read the battery voltage
+            dataToSend.battery = readBatteryVoltage(false);
+        }
     }
 }
 
@@ -198,8 +218,8 @@ void setup()
     setupWiFi();
     setupOTA();
 
-    // Power ON the board
-    powerOnBoard();
+    // Wi-Fi is disabled until user power ON the board
+    disableWiFi();
 
     // Finish initialization by logging message and turning off the built-in LED
     Serial.println(HOSTNAME + String(" initialized"));
@@ -222,6 +242,6 @@ void loop()
     // Read battery voltage only after a period of inactivity not to disturb the user by disabling the Wi-Fi
     if (millis() - lastUserActivityTime > INACTIVITY_PERIOD_FOR_BATTERY_READ)
     {
-        dataToSend.battery = readBatteryVoltage();
+        dataToSend.battery = readBatteryVoltage(isBoardPowered);
     }
 }

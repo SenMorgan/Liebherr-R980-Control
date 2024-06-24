@@ -12,6 +12,8 @@
 
 void setupWiFi();
 void enableWiFi();
+void disableWiFi();
+bool isWiFiEnabled();
 void setupOTA();
 void handleOTA();
 

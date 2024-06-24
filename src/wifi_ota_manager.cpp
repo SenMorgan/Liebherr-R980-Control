@@ -25,6 +25,9 @@ void onWiFiReady(WiFiEvent_t event, WiFiEventInfo_t info)
 void onWiFiConnected(WiFiEvent_t event, WiFiEventInfo_t info)
 {
     Serial.println("Connected to WiFi: " + WiFi.SSID());
+
+    // Start Arduino OTA
+    ArduinoOTA.begin();
 }
 
 // Callback function to handle IP address assignment event
@@ -51,8 +54,6 @@ void setupWiFi()
     // Bugfix for setting the hostname. More info: https://github.com/espressif/arduino-esp32/issues/3438
     WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
     WiFi.hostname(HOSTNAME);
-
-    enableWiFi();
 }
 
 void enableWiFi()
@@ -60,6 +61,17 @@ void enableWiFi()
     // Set device as a Wi-Fi Station
     WiFi.mode(WIFI_AP_STA);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+}
+
+void disableWiFi()
+{
+    WiFi.disconnect();
+    WiFi.mode(WIFI_OFF);
+}
+
+bool isWiFiEnabled()
+{
+    return WiFi.getMode() != WIFI_OFF;
 }
 
 // Setup Arduino OTA (Over-The-Air) update
@@ -79,7 +91,6 @@ void setupOTA()
     ArduinoOTA.onEnd([]()
                      { digitalWrite(STATUS_LED, LOW);
                         Serial.println("OTA update finished"); });
-    ArduinoOTA.begin();
 }
 
 void handleOTA()

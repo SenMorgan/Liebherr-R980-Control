@@ -13,6 +13,6 @@
 #include <EncButton.h>
 
 void setupPowerManager(Button &powerBtn);
-uint16_t readBatteryVoltage(bool reEnableWiFi = true);
+uint16_t readBatteryVoltage(bool reEnableWiFi);
 
 #endif // POWER_MANAGER_H
