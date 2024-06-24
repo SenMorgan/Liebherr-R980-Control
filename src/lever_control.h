@@ -58,7 +58,7 @@ public:
 
     /**
      * @brief Updates the lever value by reading and filtering the input.
-     * @return True if reading was performed, false otherwise.
+     * @return True if position has changed, false otherwise.
      */
     bool update();
 
@@ -74,11 +74,6 @@ public:
      */
     uint16_t value() const;
 
-    /**
-     * @brief Returns true if the lever position has changed after last reading.
-     * @return True if the lever position has changed.
-     */
-    bool changed();
 
     /**
      * @brief Returns a string with the lever debug information.

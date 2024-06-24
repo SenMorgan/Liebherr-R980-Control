@@ -1,3 +1,4 @@
+#include <array>
 #include <WiFi.h>
 #include <Wire.h>
 
@@ -16,18 +17,19 @@ excavator_data_struct receivedData;
 controller_data_struct dataToSend;
 
 // Levers
-Lever boomLever(BOOM_LEVER, 10, 1010, true);
-Lever bucketLever(BUCKET_LEVER, 65, 1010, true);
-Lever stickLever(STICK_LEVER, 10, 900, true);
-Lever swingLever(SWING_LEVER, 10, 930, false);
-Lever leftTravelLever(LEFT_TRAVEL_LEVER, 10, 1010, true);
-Lever rightTravelLever(RIGHT_TRAVEL_LEVER, 10, 1010, true);
+std::array<Lever, LEVERS_COUNT> levers = {
+    Lever(BOOM_LEVER, 10, 1010, true),
+    Lever(BUCKET_LEVER, 65, 1010, true),
+    Lever(STICK_LEVER, 10, 900, true),
+    Lever(SWING_LEVER, 10, 930, false),
+    Lever(LEFT_TRAVEL_LEVER, 10, 1010, true),
+    Lever(RIGHT_TRAVEL_LEVER, 10, 1010, true)};
 
 // Flags and variables
 volatile bool ledStatus = false;
 volatile uint32_t lastDataReceivedTime = 0;
 
-uint32_t lastLeverReadTime = 0;
+uint32_t lastSendDataTime = 0;
 
 bool isBoardPowered = false;
 
@@ -67,13 +69,11 @@ void powerOnBoard()
     // Some delay to stabilize the power
     delay(100);
 
-    // Calibrate levers after power ON
-    boomLever.calibrate();
-    bucketLever.calibrate();
-    stickLever.calibrate();
-    swingLever.calibrate();
-    leftTravelLever.calibrate();
-    rightTravelLever.calibrate();
+    // Calibrate all levers after power ON
+    for (auto &lever : levers)
+    {
+        lever.calibrate();
+    }
 }
 
 void powerOffBoard()
@@ -100,6 +100,36 @@ void powerButtonCallback()
         Serial.println("Power button clicked");
         isBoardPowered = !isBoardPowered;
         isBoardPowered ? powerOnBoard() : powerOffBoard();
+    }
+}
+
+void manageLevers()
+{
+    bool anyLeverChanged = false;
+
+    // Update all levers positions and recognize if any lever position has changed
+    for (auto &lever : levers)
+    {
+        if (lever.update())
+            anyLeverChanged = true;
+    }
+
+    // Update the last user activity time if any lever position has changed
+    if (anyLeverChanged)
+        lastUserActivityTime = millis();
+
+    // If any lever position has changed and the last data send time is greater than the minimum interval
+    // or the maximum interval has passed since the last data send, send the data to the Excavator.
+    if ((anyLeverChanged && millis() - lastSendDataTime > SEND_DATA_MIN_INTERVAL) ||
+        millis() - lastSendDataTime > SEND_DATA_MAX_INTERVAL)
+    {
+        lastSendDataTime = millis();
+
+        // Iterate over all levers and get their positions if the board is powered, otherwise set it to 0
+        for (uint8_t i = 0; i < LEVERS_COUNT; i++)
+            dataToSend.leverPositions[i] = isBoardPowered ? levers[i].position() : 0;
+
+        sendDataToExcavator(dataToSend);
     }
 }
 
@@ -187,51 +217,9 @@ void loop()
 
     ledsAnimation();
 
-    // Update all levers
-    boomLever.update();
-    bucketLever.update();
-    stickLever.update();
-    swingLever.update();
-    leftTravelLever.update();
-    rightTravelLever.update();
+    manageLevers();
 
-    // Check if any lever's position has changed
-    if (boomLever.changed() || bucketLever.changed() ||
-        stickLever.changed() || swingLever.changed() ||
-        leftTravelLever.changed() || rightTravelLever.changed())
-    {
-        lastUserActivityTime = millis(); // Update last user activity time
-    }
-
-    // Read levers positions and send data to Excavator
-    if (millis() - lastLeverReadTime > SEND_DATA_INTERVAL)
-    {
-        lastLeverReadTime = millis();
-
-        if (isBoardPowered)
-        {
-            dataToSend.boomPos = boomLever.position();
-            dataToSend.bucketPos = bucketLever.position();
-            dataToSend.stickPos = stickLever.position();
-            dataToSend.swingPos = swingLever.position();
-            dataToSend.leftTravelPos = leftTravelLever.position();
-            dataToSend.rightTravelPos = rightTravelLever.position();
-        }
-        else
-        {
-            // Zero all levers if the board is powered OFF
-            dataToSend.boomPos = 0;
-            dataToSend.bucketPos = 0;
-            dataToSend.stickPos = 0;
-            dataToSend.swingPos = 0;
-            dataToSend.leftTravelPos = 0;
-            dataToSend.rightTravelPos = 0;
-        }
-
-        sendDataToExcavator(dataToSend);
-    }
-
-    // Only read battery voltage after a period of inactivity to save power and reduce unnecessary readings
+    // Read battery voltage only after a period of inactivity not to disturb the user by disabling the Wi-Fi
     if (millis() - lastUserActivityTime > INACTIVITY_PERIOD_FOR_BATTERY_READ)
     {
         dataToSend.battery = readBatteryVoltage();

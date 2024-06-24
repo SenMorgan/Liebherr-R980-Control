@@ -12,16 +12,24 @@
 
 #include <stdint.h>
 
+#include "constants.h"
+
 // The structure type of the data that will be sent over ESP-NOW from the Controller to the Excavator
 typedef struct controller_data_struct
 {
-    int16_t boomPos;        // Position of the boom lever
-    int16_t bucketPos;      // Position of the bucket lever
-    int16_t stickPos;       // Position of the stick lever
-    int16_t swingPos;       // Position of the swing lever
-    int16_t leftTravelPos;  // Position of the left travel lever
-    int16_t rightTravelPos; // Position of the right travel lever
-    uint16_t battery;       // Controller battery voltage
+    /*
+     * The lever positions are stored in an array of 6 elements.
+     * The order of the levers is as follows:
+     * 0 - Boom
+     * 1 - Bucket
+     * 2 - Stick
+     * 3 - Swing
+     * 4 - Left Travel
+     * 5 - Right Travel
+     * The values are in the range of -255 to 255
+     */
+    int16_t leverPositions[LEVERS_COUNT];
+    uint16_t battery; // Controller battery voltage
 } controller_data_struct;
 
 // The structure type of the data that will be sent over ESP-NOW from the Excavator to the Controller

@@ -47,10 +47,12 @@ bool Lever::update()
     // Check if the update interval has passed
     if (currentTime - lastUpdateTime > updateInterval)
     {
-        // Update the last update time
-        lastUpdateTime = currentTime;
-        pos = readAndFilter();
-        return true;
+        lastUpdateTime = currentTime;     // Update the last update time
+        pos = readAndFilter();            // Get the new position
+        bool hasChanged = lastPos != pos; // Check if the position has changed
+        lastPos = pos;                    // Update the last position
+
+        return hasChanged; // Return true if the position has changed, false otherwise
     }
 
     return false;
@@ -64,16 +66,6 @@ int16_t Lever::position() const
 uint16_t Lever::value() const
 {
     return rawValue;
-}
-
-bool Lever::changed()
-{
-    if (pos != lastPos)
-    {
-        lastPos = pos; // Update lastPosition for the next check
-        return true;
-    }
-    return false;
 }
 
 String Lever::printDebug()
