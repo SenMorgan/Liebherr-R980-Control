@@ -39,7 +39,7 @@
 #define LED_BUTTON_C 13
 
 // Buttons
-#define POWER_BUTTON        16
+#define POWER_BUTTON        15
 #define MAIN_LIGHTS_BUTTON  17
 #define CENTER_SWING_BUTTON 18
 #define SCAN_BUTTON         5
@@ -47,7 +47,7 @@
 #define OPT_2_BUTTON        23
 #define A_BUTTON            25
 #define B_BUTTON            26
-#define C_BUTTON            15
+#define C_BUTTON            16
 
 // Lever analog inputs - only ADC1 pins, cause ADC2 is used by Wi-Fi
 #define BOOM_LEVER         32
