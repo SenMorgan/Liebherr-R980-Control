@@ -6,6 +6,7 @@
 #include "constants.h"
 #include "data_structures.h"
 #include "esp_now_interface.h"
+#include "leds.h"
 #include "lever_control.h"
 #include "power_manager.h"
 #include "wifi_ota_manager.h"
@@ -26,11 +27,7 @@ std::array<Lever, LEVERS_COUNT> levers = {
     Lever(RIGHT_TRAVEL_LEVER, 10, 1010, true)};
 
 // Flags and variables
-volatile bool ledStatus = false;
-volatile uint32_t lastDataReceivedTime = 0;
-
 uint32_t lastSendDataTime = 0;
-
 bool isBoardPowered = true;
 
 // Variable to track the last user activity time
@@ -43,20 +40,8 @@ void onDataFromExcavator(const uint8_t *mac, const uint8_t *incomingData, int le
     // Serial.printf("\nReceived from Excavator:\nUptime: %u\nBattery: %u\nCPU Temp: %.2f °C\n",
     //               receivedData.uptime, receivedData.battery, (float)receivedData.cpuTemp / 100.0);
 
-    // Turn ON the LED to indicate data received
-    digitalWrite(LED_BUTTON_C, HIGH);
-    ledStatus = true;
-    lastDataReceivedTime = millis();
-}
-
-void manageRxLed()
-{
-    // Turn off the built-in LED after some time if was turned on
-    if (ledStatus && millis() - lastDataReceivedTime > RX_LED_BLINK_PERIOD)
-    {
-        digitalWrite(LED_BUTTON_C, LOW);
-        ledStatus = false;
-    }
+    // Blink the LED to indicate data received
+    blinkWithLed(LED_BUTTON_B);
 }
 
 void zeroLeversPositions()
@@ -197,9 +182,6 @@ void setup()
 void loop()
 {
     handleOTA();
-
-    // Disable Rx LED after a certain period
-    manageRxLed();
 
     // Handle buttons
     tickButtons();

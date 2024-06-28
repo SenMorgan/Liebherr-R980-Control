@@ -13,6 +13,7 @@
 
 #include "constants.h"
 #include "data_structures.h"
+#include "leds.h"
 
 // The MAC address of the Excavator got from platformio_override.ini
 uint8_t excavatorMac[] = {EXCAVATOR_MAC};
@@ -26,6 +27,9 @@ esp_now_recv_cb_t onDataReceivedCallback = NULL;
 // Callback when data is sent
 void _onDataSent(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
+    // Indicate that the data was sent even if it possibly failed
+    blinkWithLed(LED_BUTTON_A);
+
     // Print error message if the data failed to send
     if (status != ESP_NOW_SEND_SUCCESS)
         Serial.printf("Data was not received by the Excavator\n");
