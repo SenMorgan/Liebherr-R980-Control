@@ -187,7 +187,7 @@ void setup()
     disableWiFi();
 
     // Finish initialization by logging message and turning off the built-in LED
-    Serial.println(HOSTNAME + String(" initialized"));
+    Serial.printf("\n%s [%s] initialized\n", HOSTNAME, WiFi.macAddress().c_str());
     digitalWrite(STATUS_LED, LOW);
 }
 
