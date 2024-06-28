@@ -17,6 +17,20 @@
 
 uint32_t lastBatteryReadTime = 0;
 
+/**
+ * Function to put the system into deep sleep mode.
+ * The board will wake up when the power button is pressed.
+ */
+void go_to_deep_sleep()
+{
+    // Configure the board to wake up when the power button is pressed
+    Serial.println("Going to deep sleep mode...");
+    esp_sleep_enable_ext0_wakeup(POWER_BUTTON, 0);
+
+    // Enter deep sleep mode
+    esp_deep_sleep_start();
+}
+
 void setupPowerManager(Button &powerBtn)
 {
     pinMode(BATTERY_VOLTAGE_PIN, INPUT);

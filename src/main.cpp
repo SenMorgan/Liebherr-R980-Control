@@ -31,7 +31,7 @@ volatile uint32_t lastDataReceivedTime = 0;
 
 uint32_t lastSendDataTime = 0;
 
-bool isBoardPowered = false;
+bool isBoardPowered = true;
 
 // Variable to track the last user activity time
 volatile uint32_t lastUserActivityTime = millis();
@@ -136,19 +136,17 @@ void powerButtonCallback()
             // Zero all levers positions
             zeroLeversPositions();
 
-            // Disable Wi-Fi and power OFF the board
+            // Disable Wi-Fi
             disableWiFi();
 
-            // Turn OFF the board and potentiometers power
+            // Turn OFF the board and LEDs power
             digitalWrite(BOARD_POWER, LOW);
-
-            // Turn off all LEDs
             digitalWrite(LED_BUTTON_A, LOW);
             digitalWrite(LED_BUTTON_B, LOW);
             digitalWrite(LED_BUTTON_C, LOW);
 
-            // It is a good time to read the battery voltage
-            dataToSend.battery = readBatteryVoltage(false);
+            // Go to deep sleep mode
+            go_to_deep_sleep();
         }
     }
 }
@@ -176,15 +174,20 @@ void setup()
     initButtons();
     powerBtn.attach(powerButtonCallback);
 
+    // Turn ON the board and potentiometers power
+    digitalWrite(BOARD_POWER, HIGH);
+
     // Setup callback for data received from Excavator
     setupDataRecvCallback(onDataFromExcavator);
 
     // Init Wi-Fi and OTA
     setupWiFi();
     setupOTA();
+    enableWiFi();
 
-    // Wi-Fi is disabled until user power ON the board
-    disableWiFi();
+    // Calibrate all levers
+    for (auto &lever : levers)
+        lever.calibrate();
 
     // Finish initialization by logging message and turning off the built-in LED
     Serial.printf("\n%s [%s] initialized\n", HOSTNAME, WiFi.macAddress().c_str());

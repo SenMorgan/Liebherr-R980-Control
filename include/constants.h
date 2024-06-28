@@ -39,7 +39,7 @@
 #define LED_BUTTON_C 13
 
 // Buttons
-#define POWER_BUTTON        15
+#define POWER_BUTTON        GPIO_NUM_15
 #define MAIN_LIGHTS_BUTTON  17
 #define CENTER_SWING_BUTTON 18
 #define SCAN_BUTTON         5
