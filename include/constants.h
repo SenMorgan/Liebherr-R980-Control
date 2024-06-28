@@ -54,8 +54,8 @@
 #define STICK_LEVER        35
 #define BUCKET_LEVER       33
 #define SWING_LEVER        34
-#define LEFT_TRAVEL_LEVER  36
-#define RIGHT_TRAVEL_LEVER 39
+#define LEFT_TRAVEL_LEVER  39
+#define RIGHT_TRAVEL_LEVER 36
 
 // Battery voltage divider (ADC2 - Wi-Fi must be disabled during readings)
 #define BATTERY_VOLTAGE_PIN 4
