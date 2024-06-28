@@ -26,38 +26,38 @@
 #define LEVERS_COUNT 6
 
 // Communication pins
-#define I2C_SDA 21
-#define I2C_SCL 22
+#define I2C_SDA GPIO_NUM_21
+#define I2C_SCL GPIO_NUM_22
 
 // Output pins
-#define BOARD_POWER 14
+#define BOARD_POWER GPIO_NUM_14
 
 // LEDs
-#define STATUS_LED   2
-#define LED_BUTTON_A 27
-#define LED_BUTTON_B 12
-#define LED_BUTTON_C 13
+#define STATUS_LED   GPIO_NUM_2
+#define LED_BUTTON_A GPIO_NUM_27
+#define LED_BUTTON_B GPIO_NUM_12
+#define LED_BUTTON_C GPIO_NUM_13
 
 // Buttons
 #define POWER_BUTTON        GPIO_NUM_15
-#define MAIN_LIGHTS_BUTTON  17
-#define CENTER_SWING_BUTTON 18
-#define SCAN_BUTTON         5
-#define OPT_1_BUTTON        19
-#define OPT_2_BUTTON        23
-#define A_BUTTON            25
-#define B_BUTTON            26
-#define C_BUTTON            16
+#define MAIN_LIGHTS_BUTTON  GPIO_NUM_17
+#define CENTER_SWING_BUTTON GPIO_NUM_18
+#define SCAN_BUTTON         GPIO_NUM_5
+#define OPT_1_BUTTON        GPIO_NUM_19
+#define OPT_2_BUTTON        GPIO_NUM_23
+#define A_BUTTON            GPIO_NUM_25
+#define B_BUTTON            GPIO_NUM_26
+#define C_BUTTON            GPIO_NUM_16
 
 // Lever analog inputs - only ADC1 pins, cause ADC2 is used by Wi-Fi
-#define BOOM_LEVER         32
-#define STICK_LEVER        35
-#define BUCKET_LEVER       33
-#define SWING_LEVER        34
-#define LEFT_TRAVEL_LEVER  39
-#define RIGHT_TRAVEL_LEVER 36
+#define BOOM_LEVER         GPIO_NUM_32
+#define STICK_LEVER        GPIO_NUM_35
+#define BUCKET_LEVER       GPIO_NUM_33
+#define SWING_LEVER        GPIO_NUM_34
+#define LEFT_TRAVEL_LEVER  GPIO_NUM_39
+#define RIGHT_TRAVEL_LEVER GPIO_NUM_36
 
 // Battery voltage divider (ADC2 - Wi-Fi must be disabled during readings)
-#define BATTERY_VOLTAGE_PIN 4
+#define BATTERY_VOLTAGE_PIN GPIO_NUM_4
 
 #endif // _CONSTANTS_H
