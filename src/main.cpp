@@ -28,7 +28,7 @@ std::array<Lever, LEVERS_COUNT> levers = {
 
 // Flags and variables
 uint32_t lastSendDataTime = 0;
-bool isBoardPowered = true, anyLeverMoved = false, leversCalibrated = false;
+bool anyLeverMoved = false, leversCalibrated = false;
 
 // Variable to track the last user activity time
 volatile uint32_t lastUserActivityTime = millis();
@@ -66,44 +66,22 @@ void powerButtonCallback()
 
     if (powerBtn.action() == EB_CLICK)
     {
-        Serial.println("Power button clicked");
-        isBoardPowered = !isBoardPowered;
-        if (isBoardPowered)
-        {
-            Serial.println("Board powered ON");
+        Serial.println("Power button clicked - Turning off the board...");
 
-            // Turn ON the board and potentiometers power
-            digitalWrite(BOARD_POWER, HIGH);
+        // Zero all levers positions
+        zeroLeversPositions();
 
-            // Some delay to stabilize the power
-            delay(100);
+        // Disable Wi-Fi
+        disableWiFi();
 
-            // Calibrate all levers after power ON
-            for (auto &lever : levers)
-                lever.calibrate();
+        // Turn OFF the board and LEDs power
+        digitalWrite(BOARD_POWER, LOW);
+        digitalWrite(LED_BUTTON_A, LOW);
+        digitalWrite(LED_BUTTON_B, LOW);
+        digitalWrite(LED_BUTTON_C, LOW);
 
-            // Enable Wi-Fi and power ON the board
-            enableWiFi();
-        }
-        else
-        {
-            Serial.println("Board powered OFF");
-
-            // Zero all levers positions
-            zeroLeversPositions();
-
-            // Disable Wi-Fi
-            disableWiFi();
-
-            // Turn OFF the board and LEDs power
-            digitalWrite(BOARD_POWER, LOW);
-            digitalWrite(LED_BUTTON_A, LOW);
-            digitalWrite(LED_BUTTON_B, LOW);
-            digitalWrite(LED_BUTTON_C, LOW);
-
-            // Go to deep sleep mode
-            go_to_deep_sleep();
-        }
+        // Go to deep sleep mode
+        go_to_deep_sleep();
     }
 }
 
@@ -121,8 +99,8 @@ void processButton(uint8_t buttonIndex, Button &button, const char *buttonName)
 {
     if (button.action() == EB_CLICK)
     {
-                dataToSend.buttonsStates[buttonIndex] = !dataToSend.buttonsStates[buttonIndex];
-Serial.printf("Button %s clicked\n", buttonName);
+        dataToSend.buttonsStates[buttonIndex] = !dataToSend.buttonsStates[buttonIndex];
+        Serial.printf("Button %s clicked\n", buttonName);
         anyButtonPressed = true;
         lastUserActivityTime = millis();
     }
@@ -138,22 +116,22 @@ Serial.printf("Button %s clicked\n", buttonName);
 void processLevers()
 {
     if (leversCalibrated)
-{
-    // Update all levers positions and recognize if any lever position has changed
-    for (auto &lever : levers)
     {
-        if (lever.update())
-            anyLeverMoved = true;
+        // Update all levers positions and recognize if any lever position has changed
+        for (auto &lever : levers)
+        {
+            if (lever.update())
+                anyLeverMoved = true;
+        }
+
+        // Update the last user activity time if any lever position has changed
+        if (anyLeverMoved)
+            lastUserActivityTime = millis();
+
+        // Iterate over all levers and get their positions if the board is powered, otherwise set it to 0
+        for (uint8_t i = 0; i < LEVERS_COUNT; i++)
+            dataToSend.leverPositions[i] = levers[i].position();
     }
-
-    // Update the last user activity time if any lever position has changed
-    if (anyLeverMoved)
-        lastUserActivityTime = millis();
-
-    // Iterate over all levers and get their positions if the board is powered, otherwise set it to 0
-    for (uint8_t i = 0; i < LEVERS_COUNT; i++)
-        dataToSend.leverPositions[i] = isBoardPowered ? levers[i].position() : 0;
-}
     else
     {
         // Calibrate all levers
@@ -179,7 +157,7 @@ void checkAndSendData()
     bool timeToPingExcavator = millis() - lastSendDataTime > SEND_DATA_MAX_INTERVAL;
     if (timeToSendData || timeToPingExcavator)
     {
-                sendDataToExcavator(dataToSend);
+        sendDataToExcavator(dataToSend);
 
         // Update the last send data time and reset the flags
         lastSendDataTime = millis();
@@ -233,7 +211,7 @@ void setup()
     setupOTA();
     enableWiFi();
 
-        // Finish initialization by logging message and turning off the built-in LED
+    // Finish initialization by logging message and turning off the built-in LED
     Serial.printf("\n%s [%s] initialized\n", HOSTNAME, WiFi.macAddress().c_str());
     digitalWrite(STATUS_LED, LOW);
 }
@@ -254,6 +232,6 @@ void loop()
     // Read battery voltage only after a period of inactivity not to disturb the user by disabling the Wi-Fi
     if (millis() - lastUserActivityTime > INACTIVITY_PERIOD_FOR_BATTERY_READ)
     {
-        dataToSend.battery = readBatteryVoltage(isBoardPowered);
+        dataToSend.battery = readBatteryVoltage();
     }
 }

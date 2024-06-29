@@ -14,6 +14,6 @@
 
 void setupPowerManager(Button &powerBtn);
 void go_to_deep_sleep();
-uint16_t readBatteryVoltage(bool reEnableWiFi);
+uint16_t readBatteryVoltage(bool reEnableWiFi = true);
 
 #endif // POWER_MANAGER_H

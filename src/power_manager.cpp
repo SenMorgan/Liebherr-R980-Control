@@ -68,6 +68,7 @@ uint16_t readBatteryVoltage(bool reEnableWiFi)
     if (millis() - lastBatteryReadTime >= BATTERY_READ_INTERVAL || lastBatteryReadTime == 0)
     {
         lastBatteryReadTime = millis();
+        Serial.println("Reading battery voltage...");
 
         // If reenableWiFi is true, disable the WiFi before reading the battery voltage
         if (reEnableWiFi)
