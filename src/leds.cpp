@@ -9,6 +9,10 @@
 
 #include "leds.h"
 #include "esp_timer.h"
+#include <map>
+
+// Map to keep track of timers by GPIO pin number
+static std::map<gpio_num_t, esp_timer_handle_t> timers;
 
 // Callback function to turn off the LED
 /**
@@ -38,21 +42,35 @@ void IRAM_ATTR timerCallback(void *arg)
  */
 void blinkWithLed(gpio_num_t ledPin, uint32_t duration)
 {
-    // Allocate memory for ledPin to pass to the callback
-    gpio_num_t *ledPinPtr = new gpio_num_t(ledPin);
+    // Check if a timer for this pin already exists
+    auto ledTimerIterator = timers.find(ledPin);
+    if (ledTimerIterator != timers.end())
+    {
+        // Timer exists, restart it with the new duration
+        esp_timer_stop(ledTimerIterator->second);
+        esp_timer_start_once(ledTimerIterator->second, duration * 1000);
+    }
+    else
+    {
+        // No timer for this pin, create a new one
+        // Allocate memory for the gpio_num_t pointer to pass as an argument to the timer callback
+        gpio_num_t *ledPinPtr = new gpio_num_t(ledPin);
 
-    // Create a single-shot timer
-    const esp_timer_create_args_t timerArgs = {
-        .callback = &timerCallback,
-        .arg = ledPinPtr, // Pass the ledPin pointer as an argument
-        .name = "ledOffTimer"};
+        const esp_timer_create_args_t timerArgs = {
+            .callback = &timerCallback,
+            .arg = ledPinPtr, // Pass the ledPin pointer as an argument
+            .name = "ledOffTimer"};
 
-    esp_timer_handle_t timerHandle;
-    esp_timer_create(&timerArgs, &timerHandle);
+        esp_timer_handle_t timerHandle;
+        esp_timer_create(&timerArgs, &timerHandle);
+
+        // Add the new timer to the map
+        timers[ledPin] = timerHandle;
+
+        // Start the timer. Duration is in microseconds
+        esp_timer_start_once(timerHandle, duration * 1000);
+    }
 
     // Turn on the LED
     digitalWrite(ledPin, HIGH);
-
-    // Start the timer. Duration is in microseconds
-    esp_timer_start_once(timerHandle, duration * 1000);
 }
