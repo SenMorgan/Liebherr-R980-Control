@@ -22,6 +22,9 @@
 // Number of levers
 #define LEVERS_COUNT 6
 
+// Number of buttons
+#define BUTTONS_COUNT 2
+
 // Communication pins
 #define I2C_SDA GPIO_NUM_21
 #define I2C_SCL GPIO_NUM_22

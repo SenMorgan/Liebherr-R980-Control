@@ -29,7 +29,14 @@ typedef struct controller_data_struct
      * The values are in the range of -255 to 255
      */
     int16_t leverPositions[LEVERS_COUNT];
-    uint16_t battery; // Controller battery voltage
+    /*
+     * The buttons states are stored in an array:
+     * 0 - Lights button
+     * 1 - Center Swing button
+     */
+    bool buttonsStates[BUTTONS_COUNT];
+    // Controller battery voltage in millivolts
+    uint16_t battery;
 } controller_data_struct;
 
 // The structure type of the data that will be sent over ESP-NOW from the Excavator to the Controller

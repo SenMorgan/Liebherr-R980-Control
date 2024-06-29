@@ -29,9 +29,11 @@ std::array<Lever, LEVERS_COUNT> levers = {
 // Flags and variables
 uint32_t lastSendDataTime = 0;
 bool isBoardPowered = true;
+bool anyLeverMoved = false;
 
 // Variable to track the last user activity time
 volatile uint32_t lastUserActivityTime = millis();
+volatile bool anyButtonPressed = false;
 
 // Callback when data from Excavator received
 void onDataFromExcavator(const uint8_t *mac, const uint8_t *incomingData, int len)
@@ -55,36 +57,6 @@ void zeroLeversPositions()
 
     // Delay to allow the ESP-NOW to send the data
     delay(100);
-}
-
-void manageLevers()
-{
-    bool anyLeverChanged = false;
-
-    // Update all levers positions and recognize if any lever position has changed
-    for (auto &lever : levers)
-    {
-        if (lever.update())
-            anyLeverChanged = true;
-    }
-
-    // Update the last user activity time if any lever position has changed
-    if (anyLeverChanged)
-        lastUserActivityTime = millis();
-
-    // If any lever position has changed and the last data send time is greater than the minimum interval
-    // or the maximum interval has passed since the last data send, send the data to the Excavator.
-    if ((anyLeverChanged && millis() - lastSendDataTime > SEND_DATA_MIN_INTERVAL) ||
-        millis() - lastSendDataTime > SEND_DATA_MAX_INTERVAL)
-    {
-        lastSendDataTime = millis();
-
-        // Iterate over all levers and get their positions if the board is powered, otherwise set it to 0
-        for (uint8_t i = 0; i < LEVERS_COUNT; i++)
-            dataToSend.leverPositions[i] = isBoardPowered ? levers[i].position() : 0;
-
-        sendDataToExcavator(dataToSend);
-    }
 }
 
 // Callback function to handle power button press
@@ -136,6 +108,81 @@ void powerButtonCallback()
     }
 }
 
+/**
+ * @brief Processes the button action and updates the button state.
+ *
+ * This function is called when a button is clicked. It updates the state of the button
+ * and sets a flag indicating that a button has been pressed. It also updates the last user
+ * activity time.
+ *
+ * @param buttonIndex The index of the button.
+ * @param button The Button object representing the clicked button.
+ */
+void processButton(uint8_t buttonIndex, Button &button, const char *buttonName)
+{
+    if (button.action() == EB_CLICK)
+    {
+                dataToSend.buttonsStates[buttonIndex] = !dataToSend.buttonsStates[buttonIndex];
+Serial.printf("Button %s clicked\n", buttonName);
+        anyButtonPressed = true;
+        lastUserActivityTime = millis();
+    }
+}
+
+/**
+ * @brief Updates the positions of all levers and handles user activity.
+ *
+ * This function updates the positions of all levers and checks if any lever position has changed.
+ * If any lever position has changed, it updates the last user activity time.
+ * It also retrieves the positions of all levers if the board is powered, otherwise sets them to 0.
+ */
+void processLevers()
+{
+    // Update all levers positions and recognize if any lever position has changed
+    for (auto &lever : levers)
+    {
+        if (lever.update())
+            anyLeverMoved = true;
+    }
+
+    // Update the last user activity time if any lever position has changed
+    if (anyLeverMoved)
+        lastUserActivityTime = millis();
+
+    // Iterate over all levers and get their positions if the board is powered, otherwise set it to 0
+    for (uint8_t i = 0; i < LEVERS_COUNT; i++)
+        dataToSend.leverPositions[i] = isBoardPowered ? levers[i].position() : 0;
+}
+
+/**
+ * Checks if it is time to send data to the Excavator and sends the data if necessary.
+ *
+ * The function checks if any lever has moved or any button has been pressed. If so, it sends the data
+ * to the Excavator every SEND_DATA_MIN_INTERVAL milliseconds. If no lever has moved or button has been
+ * pressed, it sends the data every SEND_DATA_MAX_INTERVAL milliseconds.
+ */
+void checkAndSendData()
+{
+    bool timeToSendData = (anyLeverMoved || anyButtonPressed) && millis() - lastSendDataTime > SEND_DATA_MIN_INTERVAL;
+    bool timeToPingExcavator = millis() - lastSendDataTime > SEND_DATA_MAX_INTERVAL;
+    if (timeToSendData || timeToPingExcavator)
+    {
+                sendDataToExcavator(dataToSend);
+
+        // Update the last send data time and reset the flags
+        lastSendDataTime = millis();
+        anyLeverMoved = false;
+        anyButtonPressed = false;
+
+        // Print all lever positions if any lever has moved
+        Serial.printf("Boom: %3d | Bucket: %3d | Stick: %3d | Swing: %3d | "
+                      "Track Left: %3d | Track Right: %3d | Lights: %d | Center Swing: %d | Battery: %3d\n",
+                      dataToSend.leverPositions[0], dataToSend.leverPositions[1], dataToSend.leverPositions[2],
+                      dataToSend.leverPositions[3], dataToSend.leverPositions[4], dataToSend.leverPositions[5],
+                      dataToSend.buttonsStates[0], dataToSend.buttonsStates[1], dataToSend.battery);
+    }
+}
+
 void setup()
 {
     // Setup pins
@@ -158,6 +205,10 @@ void setup()
     // Init buttons
     initButtons();
     powerBtn.attach(powerButtonCallback);
+    mainLightsBtn.attach([=]()
+                         { processButton(0, mainLightsBtn, "Lights"); });
+    centerSwingBtn.attach([=]()
+                          { processButton(1, centerSwingBtn, "Center Swing"); });
 
     // Turn ON the board and potentiometers power
     digitalWrite(BOARD_POWER, HIGH);
@@ -187,7 +238,10 @@ void loop()
     tickButtons();
 
     // Get the lever positions and send the data to the Excavator
-    manageLevers();
+    processLevers();
+
+    // Send data to the Excavator if necessary
+    checkAndSendData();
 
     // Read battery voltage only after a period of inactivity not to disturb the user by disabling the Wi-Fi
     if (millis() - lastUserActivityTime > INACTIVITY_PERIOD_FOR_BATTERY_READ)
