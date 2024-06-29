@@ -28,6 +28,7 @@ Lever::Lever(uint8_t _pin,
     minOutput = -255;
     maxOutput = +255;
     pos = 0;
+    lastPos = -999; // Set to an invalid value to force the first update
     rawValue = 0;
     updateInterval = 10;
     lastUpdateTime = 0;
@@ -40,6 +41,13 @@ Lever::Lever(uint8_t _pin,
 void Lever::calibrate()
 {
     zeroPos = analogRead(pin);
+
+    // Fill the readings buffer with the current value
+    for (uint8_t i = 0; i < numReadings; i++)
+    {
+        readings[i] = zeroPos;
+        total += zeroPos;
+    }
 }
 
 bool Lever::update()

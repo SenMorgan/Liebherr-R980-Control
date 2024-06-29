@@ -28,8 +28,7 @@ std::array<Lever, LEVERS_COUNT> levers = {
 
 // Flags and variables
 uint32_t lastSendDataTime = 0;
-bool isBoardPowered = true;
-bool anyLeverMoved = false;
+bool isBoardPowered = true, anyLeverMoved = false, leversCalibrated = false;
 
 // Variable to track the last user activity time
 volatile uint32_t lastUserActivityTime = millis();
@@ -138,6 +137,8 @@ Serial.printf("Button %s clicked\n", buttonName);
  */
 void processLevers()
 {
+    if (leversCalibrated)
+{
     // Update all levers positions and recognize if any lever position has changed
     for (auto &lever : levers)
     {
@@ -152,6 +153,17 @@ void processLevers()
     // Iterate over all levers and get their positions if the board is powered, otherwise set it to 0
     for (uint8_t i = 0; i < LEVERS_COUNT; i++)
         dataToSend.leverPositions[i] = isBoardPowered ? levers[i].position() : 0;
+}
+    else
+    {
+        // Calibrate all levers
+        for (auto &lever : levers)
+            lever.calibrate();
+
+        // Set the flag indicating that the levers are calibrated
+        leversCalibrated = true;
+        Serial.println("Levers calibrated");
+    }
 }
 
 /**
@@ -221,11 +233,7 @@ void setup()
     setupOTA();
     enableWiFi();
 
-    // Calibrate all levers
-    for (auto &lever : levers)
-        lever.calibrate();
-
-    // Finish initialization by logging message and turning off the built-in LED
+        // Finish initialization by logging message and turning off the built-in LED
     Serial.printf("\n%s [%s] initialized\n", HOSTNAME, WiFi.macAddress().c_str());
     digitalWrite(STATUS_LED, LOW);
 }
