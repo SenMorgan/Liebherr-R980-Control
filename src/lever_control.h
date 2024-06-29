@@ -30,8 +30,8 @@ private:
     uint16_t updateInterval;   // Period between readings in milliseconds
     uint32_t lastUpdateTime;   // Last reading time in milliseconds
 
-    uint8_t numReadings = 20; // Number of readings to average
-    uint16_t readings[20];    // Readings buffer (size must be the same as numReadings)
+    uint8_t numReadings = 10; // Number of readings to average
+    uint16_t readings[10];    // Readings buffer (size must be the same as numReadings)
     uint8_t readIndex = 0;    // Index of the current reading
     uint32_t total = 0;       // Running total
     int16_t calcRes = 0;      // Calculated result
