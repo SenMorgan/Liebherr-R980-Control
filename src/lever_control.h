@@ -16,18 +16,19 @@ class Lever
 {
 private:
     uint8_t pin;
-    uint16_t minAdcVal;      // Minimum expected analog value
-    uint16_t maxAdcVal;      // Maximum expected analog value
-    uint16_t zeroPos;        // Center position of the lever
-    uint16_t deadZone;       // Dead zone value
-    bool invert;             // Invert the lever value
-    int16_t pos;             // Current lever calculated position
-    int16_t lastPos;         // Last lever calculated position
-    uint16_t rawValue;       // Current lever raw value
-    int16_t minOutput;       // Minimum output value
-    int16_t maxOutput;       // Maximum output value
-    uint16_t updateInterval; // Period between readings in milliseconds
-    uint32_t lastUpdateTime; // Last reading time in milliseconds
+    uint16_t minAdcVal;        // Minimum expected analog value
+    uint16_t maxAdcVal;        // Maximum expected analog value
+    uint16_t zeroPos;          // Center position of the lever
+    uint16_t deadZone;         // Dead zone value
+    bool invert;               // Invert the lever value
+    bool exponentialSmoothing; // Use exponential smoothing
+    int16_t pos;               // Current lever calculated position
+    int16_t lastPos;           // Last lever calculated position
+    uint16_t rawValue;         // Current lever raw value
+    int16_t minOutput;         // Minimum output value
+    int16_t maxOutput;         // Maximum output value
+    uint16_t updateInterval;   // Period between readings in milliseconds
+    uint32_t lastUpdateTime;   // Last reading time in milliseconds
 
     uint8_t numReadings = 20; // Number of readings to average
     uint16_t readings[20];    // Readings buffer (size must be the same as numReadings)
@@ -49,7 +50,8 @@ public:
           uint16_t _minAdcVal = 0,
           uint16_t _maxAdcVal = 1023,
           bool _invert = false,
-          uint16_t _deadZone = 30);
+          uint16_t _deadZone = 30,
+          bool _exponentialSmoothing = false);
 
     /**
      * @brief Calibrates the lever by reading the center position.
@@ -73,7 +75,6 @@ public:
      * @return The raw value of the lever.
      */
     uint16_t value() const;
-
 
     /**
      * @brief Returns a string with the lever debug information.

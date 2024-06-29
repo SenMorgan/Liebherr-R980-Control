@@ -16,13 +16,15 @@ Lever::Lever(uint8_t _pin,
              uint16_t _minAdcVal,
              uint16_t _maxAdcVal,
              bool _invert,
-             uint16_t _deadZone)
+             uint16_t _deadZone,
+             bool _exponentialSmoothing)
 {
     pin = _pin;
     minAdcVal = _minAdcVal;
     maxAdcVal = _maxAdcVal;
     invert = _invert;
     deadZone = _deadZone;
+    exponentialSmoothing = _exponentialSmoothing;
     minOutput = -255;
     maxOutput = +255;
     pos = 0;
@@ -103,8 +105,9 @@ int16_t Lever::readAndFilter()
         // Constrain the value to the output range
         calcRes = constrain(calcRes, minOutput, maxOutput);
 
-        // Use exponential function to smooth out the output
-        calcRes = pow(calcRes, 3) / pow(maxOutput, 2);
+        // Use exponential function to smooth out the output if needed
+        if (exponentialSmoothing)
+            calcRes = pow(calcRes, 3) / pow(maxOutput, 2);
 
         // Invert the value if needed
         if (invert)
