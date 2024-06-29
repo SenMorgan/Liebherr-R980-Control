@@ -20,7 +20,7 @@ controller_data_struct dataToSend;
 // Levers
 std::array<Lever, LEVERS_COUNT> levers = {
     Lever(BOOM_LEVER, 10, 1010, true),
-    Lever(BUCKET_LEVER, 65, 1010, true),
+    Lever(BUCKET_LEVER, 65, 1010, true, 70),
     Lever(STICK_LEVER, 10, 900, true),
     Lever(SWING_LEVER, 10, 930, false),
     Lever(LEFT_TRAVEL_LEVER, 10, 1010, true),

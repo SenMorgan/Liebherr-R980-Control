@@ -50,7 +50,7 @@ public:
           uint16_t _minAdcVal = 0,
           uint16_t _maxAdcVal = 1023,
           bool _invert = false,
-          uint16_t _deadZone = 30,
+          uint16_t _deadZone = 40,
           bool _exponentialSmoothing = false);
 
     /**
