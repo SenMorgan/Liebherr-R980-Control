@@ -25,8 +25,8 @@ Lever::Lever(uint8_t _pin,
     invert = _invert;
     deadZone = _deadZone;
     exponentialSmoothing = _exponentialSmoothing;
-    minOutput = -255;
-    maxOutput = +255;
+    minOutput = -1023;
+    maxOutput = +1023;
     pos = 0;
     lastPos = -999; // Set to an invalid value to force the first update
     rawValue = 0;
