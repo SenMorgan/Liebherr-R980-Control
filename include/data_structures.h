@@ -33,6 +33,7 @@ typedef struct controller_data_struct
      * The buttons states are stored in an array:
      * 0 - Lights button
      * 1 - Center Swing button
+     * 2 - Beacon light mode button
      */
     bool buttonsStates[BUTTONS_COUNT];
     // Controller battery voltage in millivolts

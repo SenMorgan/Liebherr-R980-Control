@@ -23,7 +23,7 @@
 #define LEVERS_COUNT 6
 
 // Number of buttons
-#define BUTTONS_COUNT 2
+#define BUTTONS_COUNT 3
 
 // Communication pins
 #define I2C_SDA GPIO_NUM_21
@@ -39,15 +39,15 @@
 #define LED_BUTTON_C GPIO_NUM_13
 
 // Buttons
-#define POWER_BUTTON        GPIO_NUM_15
-#define MAIN_LIGHTS_BUTTON  GPIO_NUM_17
-#define CENTER_SWING_BUTTON GPIO_NUM_18
-#define SCAN_BUTTON         GPIO_NUM_5
-#define OPT_1_BUTTON        GPIO_NUM_19
-#define OPT_2_BUTTON        GPIO_NUM_23
-#define A_BUTTON            GPIO_NUM_25
-#define B_BUTTON            GPIO_NUM_26
-#define C_BUTTON            GPIO_NUM_16
+#define POWER_BUTTON             GPIO_NUM_15
+#define MAIN_LIGHTS_BUTTON       GPIO_NUM_17
+#define CENTER_SWING_BUTTON      GPIO_NUM_18
+#define BEACON_LIGHT_MODE_BUTTON GPIO_NUM_19
+#define OPT_2_BUTTON             GPIO_NUM_23
+#define A_BUTTON                 GPIO_NUM_25
+#define B_BUTTON                 GPIO_NUM_26
+#define C_BUTTON                 GPIO_NUM_16
+#define SCAN_BUTTON              GPIO_NUM_5
 
 // Lever analog inputs - only ADC1 pins, cause ADC2 is used by Wi-Fi
 #define BOOM_LEVER         GPIO_NUM_32

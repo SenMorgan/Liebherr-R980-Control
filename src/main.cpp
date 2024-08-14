@@ -199,6 +199,8 @@ void setup()
                          { processButton(0, mainLightsBtn, "Lights"); });
     centerSwingBtn.attach([=]()
                           { processButton(1, centerSwingBtn, "Center Swing"); });
+    beaconLightModeBtn.attach([=]()
+                              { processButton(2, beaconLightModeBtn, "Beacon Light Mode"); });
 
     // Turn ON the board and potentiometers power
     digitalWrite(BOARD_POWER, HIGH);

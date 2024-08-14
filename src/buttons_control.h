@@ -18,11 +18,11 @@ void tickButtons();
 extern Button powerBtn;
 extern Button mainLightsBtn;
 extern Button centerSwingBtn;
-extern Button scanBtn;
-extern Button opt1Btn;
+extern Button beaconLightModeBtn;
 extern Button opt2Btn;
 extern Button aBtn;
 extern Button bBtn;
 extern Button cBtn;
+extern Button scanBtn;
 
 #endif // BUTTONS_CONTROL_H

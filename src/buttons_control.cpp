@@ -14,12 +14,12 @@
 Button powerBtn(POWER_BUTTON, INPUT_PULLUP);
 Button mainLightsBtn(MAIN_LIGHTS_BUTTON, INPUT_PULLUP);
 Button centerSwingBtn(CENTER_SWING_BUTTON, INPUT_PULLUP);
-Button scanBtn(SCAN_BUTTON, INPUT_PULLUP);
-Button opt1Btn(OPT_1_BUTTON, INPUT_PULLUP);
+Button beaconLightModeBtn(BEACON_LIGHT_MODE_BUTTON, INPUT_PULLUP);
 Button opt2Btn(OPT_2_BUTTON, INPUT_PULLUP);
 Button aBtn(A_BUTTON, INPUT_PULLUP);
 Button bBtn(B_BUTTON, INPUT_PULLUP);
 Button cBtn(C_BUTTON, INPUT_PULLUP);
+Button scanBtn(SCAN_BUTTON, INPUT_PULLUP);
 
 void defaultButtonCallback(const char *buttonName, Button &button)
 {
@@ -42,12 +42,12 @@ void initButtons()
                          { defaultButtonCallback("Main Lights", mainLightsBtn); });
     centerSwingBtn.attach([=]()
                           { defaultButtonCallback("Center Swing", centerSwingBtn); });
-    scanBtn.attach([=]()
-                   { defaultButtonCallback("Scan", scanBtn); });
-    opt1Btn.attach([=]()
-                   { defaultButtonCallback("Option 1", opt1Btn); });
+    beaconLightModeBtn.attach([=]()
+                              { defaultButtonCallback("Beacon Light Mode", beaconLightModeBtn); });
     opt2Btn.attach([=]()
                    { defaultButtonCallback("Option 2", opt2Btn); });
+    scanBtn.attach([=]()
+                   { defaultButtonCallback("Scan", scanBtn); });
     aBtn.attach([=]()
                 { defaultButtonCallback("A", aBtn); });
     bBtn.attach([=]()
@@ -62,7 +62,7 @@ void tickButtons()
     mainLightsBtn.tick();
     centerSwingBtn.tick();
     scanBtn.tick();
-    opt1Btn.tick();
+    beaconLightModeBtn.tick();
     opt2Btn.tick();
     aBtn.tick();
     bBtn.tick();
