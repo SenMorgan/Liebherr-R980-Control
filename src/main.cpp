@@ -39,8 +39,7 @@ volatile bool anyButtonPressed = false;
 void onDataFromExcavator(const uint8_t *mac, const uint8_t *incomingData, int len)
 {
     memcpy(&receivedData, incomingData, sizeof(receivedData));
-    // Serial.printf("\nReceived from Excavator:\nUptime: %u\nBattery: %u\nCPU Temp: %.2f °C\n",
-    //               receivedData.uptime, receivedData.battery, (float)receivedData.cpuTemp / 100.0);
+    Serial.printf("\nReceived from Excavator:\nUptime: %u\nBattery: %u\n", receivedData.uptime, receivedData.battery);
 
     // Blink the LED to indicate data received
     blinkWithLed(LED_BUTTON_B);

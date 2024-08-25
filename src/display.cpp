@@ -11,6 +11,8 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+
+#include <data_structures.h>
 #include "display.h"
 
 // Task parameters
@@ -19,13 +21,19 @@
 #define DISPLAY_TASK_PRIORITY     (tskIDLE_PRIORITY + 1)
 #define DISPLAY_TASK_CORE         1 // Core 0 is used by the WiFi
 
-#define SCREEN_WIDTH  128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 64  // OLED display height, in pixels
+// Display dimensions
+#define SCREEN_WIDTH  128
+#define SCREEN_HEIGHT 64
 
-// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
+// Display addresses
 #define LEFT_SCREEN_ADDRESS  0x3C
 #define RIGHT_SCREEN_ADDRESS 0x3D
 
+// Global variables
+extern controller_data_struct dataToSend;
+extern excavator_data_struct receivedData;
+
+// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
 Adafruit_SSD1306 leftDisplay(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire);
 Adafruit_SSD1306 rightDisplay(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire);
 
@@ -39,13 +47,43 @@ void setupDisplay(Adafruit_SSD1306 &display, uint8_t address)
     }
 }
 
-void printTitle(Adafruit_SSD1306 &display, const char *title)
+void printTitle(Adafruit_SSD1306 &display, const char *title, uint16_t batteryVoltage)
 {
     display.clearDisplay();
-    display.setTextSize(2);
+    display.setTextSize(1);
     display.setTextColor(SSD1306_WHITE);
     display.setCursor(0, 0);
     display.println(title);
+
+    // Calculate the battery level percentage (assuming 3.0V to 4.2V range)
+    float batteryLevel = (batteryVoltage - 3000) / 12.0; // Convert mV to percentage
+
+    // Draw the battery icon
+    int batteryIconWidth = 16;
+    int batteryIconHeight = 8;
+    int batteryPoleWidth = 2;
+    int batteryPoleHeight = 4;
+    int batteryIconX = display.width() - batteryIconWidth - batteryPoleWidth;
+    int batteryIconY = 0;
+
+    // Draw the battery outline
+    display.drawRect(batteryIconX, batteryIconY, batteryIconWidth, batteryIconHeight, SSD1306_WHITE);
+
+    // Draw the battery pole
+    display.fillRect(batteryIconX + batteryIconWidth, batteryIconHeight / 2 - batteryPoleHeight / 2,
+                     batteryPoleWidth, batteryPoleHeight, SSD1306_WHITE);
+
+    // Draw the battery level
+    int batteryLevelWidth = (batteryIconWidth - 2) * (batteryLevel / 100.0);
+    display.fillRect(batteryIconX + 1, batteryIconY + 1, batteryLevelWidth, batteryIconHeight - 2, SSD1306_WHITE);
+
+    // Draw the battery voltage
+    int batteryVoltageWidth = 30;
+    display.setCursor(batteryIconX - batteryVoltageWidth - 5, batteryIconY);
+    display.setTextSize(1);
+    display.print(batteryVoltage / 1000.0, 2); // Print voltage in Volts
+    display.print("V");
+
     display.display();
 }
 
@@ -66,12 +104,12 @@ void displayTask(void *pvParameters)
     setupDisplay(leftDisplay, LEFT_SCREEN_ADDRESS);
     setupDisplay(rightDisplay, RIGHT_SCREEN_ADDRESS);
 
-    printTitle(leftDisplay, "Controller");
-    printTitle(rightDisplay, "Excavator");
-
     // Main task loop
     for (;;)
     {
+        printTitle(leftDisplay, "Controller", dataToSend.battery);
+        printTitle(rightDisplay, "Excavator", receivedData.battery);
+
         // Wait for the next cycle.
         xTaskDelayUntil(&xLastWakeTime, xFrequency);
     }
