@@ -5,6 +5,7 @@
 #include "buttons_control.h"
 #include "constants.h"
 #include "data_structures.h"
+#include "display.h"
 #include "esp_now_interface.h"
 #include "leds.h"
 #include "lever_control.h"
@@ -207,6 +208,9 @@ void setup()
 
     // Setup callback for data received from Excavator
     setupDataRecvCallback(onDataFromExcavator);
+
+    // Init displays
+    displayTaskInit();
 
     // Init Wi-Fi and OTA
     setupWiFi();
