@@ -47,7 +47,7 @@ void setupDisplay(Adafruit_SSD1306 &display, uint8_t address)
     }
 }
 
-void printTitle(Adafruit_SSD1306 &display, const char *title, uint16_t batteryVoltage)
+void printTitle(Adafruit_SSD1306 &display, const char *title, uint16_t batteryVoltage, uint16_t uptimeSec)
 {
     display.clearDisplay();
     display.setTextSize(1);
@@ -84,6 +84,11 @@ void printTitle(Adafruit_SSD1306 &display, const char *title, uint16_t batteryVo
     display.print(batteryVoltage / 1000.0, 2); // Print voltage in Volts
     display.print("V");
 
+    // Draw the uptime on the next line
+    display.setCursor(0, 8);
+    display.print("Uptime: ");
+    display.print(uptimeSec);
+
     display.display();
 }
 
@@ -107,8 +112,8 @@ void displayTask(void *pvParameters)
     // Main task loop
     for (;;)
     {
-        printTitle(leftDisplay, "Controller", dataToSend.battery);
-        printTitle(rightDisplay, "Excavator", receivedData.battery);
+        printTitle(leftDisplay, "Controller", dataToSend.battery, millis() / 1000);
+        printTitle(rightDisplay, "Excavator", receivedData.battery, receivedData.uptime);
 
         // Wait for the next cycle.
         xTaskDelayUntil(&xLastWakeTime, xFrequency);
