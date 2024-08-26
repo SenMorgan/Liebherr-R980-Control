@@ -11,6 +11,7 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <freertos/FreeRTOS.h>
 
 #include <data_structures.h>
 #include "display.h"
@@ -32,10 +33,37 @@
 // Global variables
 extern controller_data_struct dataToSend;
 extern excavator_data_struct receivedData;
+volatile bool displayEnabled = true;
+
+// Semaphore to signal display disable
+SemaphoreHandle_t displayDisableSemaphore;
 
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
 Adafruit_SSD1306 leftDisplay(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire);
 Adafruit_SSD1306 rightDisplay(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire);
+
+/**
+ * @brief Disables the display.
+ *
+ * @param blocking If true, wait until the displays are disabled.
+ */
+void disableDisplay(bool blocking)
+{
+    displayEnabled = false;
+
+    Serial.println("Disabling display...");
+
+    if (blocking)
+    {
+        // Wait for the semaphore to be given by the display task
+        if (xSemaphoreTake(displayDisableSemaphore, portMAX_DELAY) != pdTRUE)
+        {
+            Serial.println("Failed to disable display");
+        }
+
+        Serial.println("Display disabled");
+    }
+}
 
 void setupDisplay(Adafruit_SSD1306 &display, uint8_t address)
 {
@@ -112,6 +140,23 @@ void displayTask(void *pvParameters)
     // Main task loop
     for (;;)
     {
+        if (!displayEnabled)
+        {
+            leftDisplay.clearDisplay();
+            leftDisplay.display();
+            rightDisplay.clearDisplay();
+            rightDisplay.display();
+
+            // Give the semaphore to indicate that the display is disabled
+            xSemaphoreGive(displayDisableSemaphore);
+
+            // Wait for the display to be enabled
+            while (!displayEnabled)
+            {
+                vTaskDelay(pdMS_TO_TICKS(100));
+            }
+        }
+
         printTitle(leftDisplay, "Controller", dataToSend.battery, millis() / 1000);
         printTitle(rightDisplay, "Excavator", receivedData.battery, receivedData.uptime);
 
@@ -129,6 +174,9 @@ void displayTask(void *pvParameters)
  */
 void displayTaskInit(void)
 {
+    // Create the semaphore
+    displayDisableSemaphore = xSemaphoreCreateBinary();
+
     if (pdPASS != xTaskCreatePinnedToCore(displayTask,
                                           "displayTask",
                                           DISPLAY_TASK_STACK_SIZE,

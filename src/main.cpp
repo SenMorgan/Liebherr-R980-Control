@@ -74,6 +74,9 @@ void powerButtonCallback()
         // Disable Wi-Fi
         disableWiFi();
 
+        // Turn OFF the displays
+        disableDisplay();
+
         // Turn OFF the board and LEDs power
         digitalWrite(BOARD_POWER, LOW);
         digitalWrite(LED_BUTTON_A, LOW);

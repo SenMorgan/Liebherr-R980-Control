@@ -11,5 +11,6 @@
 #define DISPLAY_H
 
 void displayTaskInit(void);
+void disableDisplay(bool blocking = true);
 
 #endif // DISPLAY_H
