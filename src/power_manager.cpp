@@ -13,7 +13,7 @@
 #include "wifi_ota_manager.h"
 
 // Formula to calculate the battery voltage (with a shorted diode)
-#define CALCULATE_BATT_MV(mv) ((mv) * 7.35 + 410)
+#define CALCULATE_BATT_MV(mv) ((mv) * 7.69 + 323)
 
 uint32_t lastBatteryReadTime = 0;
 
