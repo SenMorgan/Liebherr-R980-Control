@@ -58,6 +58,27 @@ void zeroLeversPositions()
     delay(100);
 }
 
+void powerOffBoard()
+{
+    // Zero all levers positions
+    zeroLeversPositions();
+
+    // Disable Wi-Fi
+    disableWiFi();
+
+    // Turn OFF the displays
+    disableDisplay();
+
+    // Turn OFF the board and LEDs power
+    digitalWrite(BOARD_POWER, LOW);
+    digitalWrite(LED_BUTTON_A, LOW);
+    digitalWrite(LED_BUTTON_B, LOW);
+    digitalWrite(LED_BUTTON_C, LOW);
+
+    // Go to deep sleep mode
+    go_to_deep_sleep();
+}
+
 // Callback function to handle power button press
 void powerButtonCallback()
 {
@@ -67,24 +88,7 @@ void powerButtonCallback()
     if (powerBtn.action() == EB_CLICK)
     {
         Serial.println("Power button clicked - Turning off the board...");
-
-        // Zero all levers positions
-        zeroLeversPositions();
-
-        // Disable Wi-Fi
-        disableWiFi();
-
-        // Turn OFF the displays
-        disableDisplay();
-
-        // Turn OFF the board and LEDs power
-        digitalWrite(BOARD_POWER, LOW);
-        digitalWrite(LED_BUTTON_A, LOW);
-        digitalWrite(LED_BUTTON_B, LOW);
-        digitalWrite(LED_BUTTON_C, LOW);
-
-        // Go to deep sleep mode
-        go_to_deep_sleep();
+        powerOffBoard();
     }
 }
 
@@ -252,5 +256,12 @@ void loop()
     if (millis() - lastUserActivityTime > INACTIVITY_PERIOD_FOR_BATTERY_READ)
     {
         dataToSend.battery = readBatteryVoltage();
+    }
+
+    // Power off the board after a period of inactivity
+    if (millis() - lastUserActivityTime > INACTIVITY_PERIOD_FOR_POWER_OFF)
+    {
+        Serial.println("Powering off the board due to inactivity...");
+        powerOffBoard();
     }
 }

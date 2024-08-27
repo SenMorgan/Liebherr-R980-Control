@@ -16,6 +16,8 @@
 
 // Period of user inactivity to read the battery voltage in milliseconds (will disable Wi-Fi for a few seconds)
 #define INACTIVITY_PERIOD_FOR_BATTERY_READ 5000
+// Period of inactivity to power off the board in milliseconds
+#define INACTIVITY_PERIOD_FOR_POWER_OFF    10 * 60 * 1000 // 10 minutes
 // Period between battery voltage readings in milliseconds
 #define BATTERY_READ_INTERVAL              5 * 60 * 1000 // 5 minutes
 
