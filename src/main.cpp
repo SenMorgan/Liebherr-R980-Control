@@ -191,10 +191,6 @@ void setup()
     // Init Serial Monitor
     Serial.begin(115200);
 
-    // Setup power manager and read battery voltage during startup
-    setupPowerManager(powerBtn);
-    dataToSend.battery = readBatteryVoltage(false);
-
     // Init buttons
     initButtons();
     powerBtn.attach(powerButtonCallback);
@@ -205,14 +201,29 @@ void setup()
     beaconLightModeBtn.attach([=]()
                               { processButton(2, beaconLightModeBtn, "Beacon Light Mode"); });
 
+    // Init displays
+    displayTaskInit();
+
+    // Setup power manager and read battery voltage during startup
+    setupPowerManager(powerBtn);
+    dataToSend.battery = readBatteryVoltage(false);
+    if (dataToSend.battery < 3400)
+    {
+        Serial.println("Battery voltage is too low");
+        // Show low power message on the displays
+        setDisplayState(DISPLAY_LOW_POWER);
+        // Go to deep sleep mode after delay
+        delay(5000);
+        disableDisplay();
+        digitalWrite(STATUS_LED, LOW);
+        go_to_deep_sleep();
+    }
+
     // Turn ON the board and potentiometers power
     digitalWrite(BOARD_POWER, HIGH);
 
     // Setup callback for data received from Excavator
     setupDataRecvCallback(onDataFromExcavator);
-
-    // Init displays
-    displayTaskInit();
 
     // Init Wi-Fi and OTA
     setupWiFi();

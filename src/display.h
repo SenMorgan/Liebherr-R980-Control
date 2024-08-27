@@ -10,7 +10,15 @@
 #ifndef DISPLAY_H
 #define DISPLAY_H
 
+enum DisplayState
+{
+    DISPLAY_OFF,
+    DISPLAY_DEFAULT,
+    DISPLAY_LOW_POWER
+};
+
 void displayTaskInit(void);
+void setDisplayState(DisplayState state);
 void disableDisplay(bool blocking = true);
 
 #endif // DISPLAY_H
