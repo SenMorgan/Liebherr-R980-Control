@@ -65,6 +65,18 @@ void disableDisplay(bool blocking)
     }
 }
 
+/**
+ * @brief Power off the display (the lowest power consumption).
+ *
+ * @param display The display object to power off.
+ */
+void powerOffDisplay(Adafruit_SSD1306 &display)
+{
+    display.clearDisplay();
+    display.display();
+    display.ssd1306_command(SSD1306_DISPLAYOFF);
+}
+
 void setupDisplay(Adafruit_SSD1306 &display, uint8_t address)
 {
     // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
@@ -142,10 +154,9 @@ void displayTask(void *pvParameters)
     {
         if (!displayEnabled)
         {
-            leftDisplay.clearDisplay();
-            leftDisplay.display();
-            rightDisplay.clearDisplay();
-            rightDisplay.display();
+            // Power off the displays
+            powerOffDisplay(leftDisplay);
+            powerOffDisplay(rightDisplay);
 
             // Give the semaphore to indicate that the display is disabled
             xSemaphoreGive(displayDisableSemaphore);
