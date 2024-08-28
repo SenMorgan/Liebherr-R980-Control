@@ -12,6 +12,7 @@
 #include <ArduinoOTA.h>
 
 #include "constants.h"
+#include "display.h"
 #include "esp_now_interface.h"
 
 // Callback function to handle WiFi ready event
@@ -83,10 +84,11 @@ void setupOTA()
 
     // Callback functions for OTA events
     ArduinoOTA.onStart([]()
-                       { Serial.println("OTA update started"); });
+                       { Serial.println("OTA update started");
+                       setDisplayState(DISPLAY_OTA_UPDATE); });
     // Blink with the built-in LED while updating
-    ArduinoOTA.onProgress([](uint16_t progress, uint16_t total)
-                          { digitalWrite(STATUS_LED, !digitalRead(STATUS_LED)); });
+    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total)
+                          { setOTAProgress(progress / (total / 100)); });
     // Turn off the built-in LED when update is finished
     ArduinoOTA.onEnd([]()
                      { digitalWrite(STATUS_LED, LOW);

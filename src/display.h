@@ -14,11 +14,13 @@ enum DisplayState
 {
     DISPLAY_OFF,
     DISPLAY_DEFAULT,
-    DISPLAY_LOW_POWER
+    DISPLAY_LOW_POWER,
+    DISPLAY_OTA_UPDATE
 };
 
 void displayTaskInit(void);
 void setDisplayState(DisplayState state);
+void setOTAProgress(uint16_t percentage);
 void disableDisplay(bool blocking = true);
 
 #endif // DISPLAY_H

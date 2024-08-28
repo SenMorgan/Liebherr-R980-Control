@@ -42,6 +42,8 @@ SemaphoreHandle_t displayDisabledSemaphore;
 Adafruit_SSD1306 leftDisplay(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire);
 Adafruit_SSD1306 rightDisplay(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire);
 
+volatile uint16_t otaProgress;
+
 /**
  * @brief Sets the display state.
  *
@@ -107,6 +109,19 @@ void setupDisplay(Adafruit_SSD1306 &display, uint8_t address)
     display.setTextSize(1);
 }
 
+/**
+ * @brief Sets the progress of the OTA (Over-The-Air) update.
+ *
+ * This function updates the value of the OTA progress variable that is used to display
+ * the progress of the OTA update on the screen.
+ *
+ * @param percentage The progress percentage of the OTA update.
+ */
+void setOTAProgress(uint16_t percentage)
+{
+    otaProgress = percentage;
+}
+
 void printTitle(Adafruit_SSD1306 &display, const char *title, uint16_t batteryVoltage, uint16_t uptimeSec)
 {
     display.clearDisplay();
@@ -151,6 +166,7 @@ void printTitle(Adafruit_SSD1306 &display, const char *title, uint16_t batteryVo
     display.display();
 }
 
+// ############################## Screens ##############################
 void displayDefault()
 {
     printTitle(leftDisplay, "Controller", dataToSend.battery, millis() / 1000);
@@ -195,6 +211,56 @@ void displayLowPower()
     blinkState = !blinkState;
 }
 
+void displayOtaUpdate()
+{
+    // Clear the displays
+    leftDisplay.clearDisplay();
+    rightDisplay.clearDisplay();
+
+    // Print OTA update message
+    leftDisplay.setTextSize(2);
+    leftDisplay.setCursor(5, 0);
+    leftDisplay.print("OTA UPDATE");
+
+    rightDisplay.setTextSize(2);
+    rightDisplay.setCursor(5, 0);
+    rightDisplay.print("IN PROCESS");
+
+    // Draw progress bar
+    uint16_t barWidth = 100;
+    uint16_t barHeight = 10;
+    uint16_t barX = (leftDisplay.width() - barWidth) / 2;
+    uint16_t barY = (leftDisplay.height() - barHeight) / 2;
+
+    // Calculate the fill width based on the progress percentage
+    uint16_t barFillWidth = (barWidth - 2) * ((float)otaProgress / 100);
+
+    leftDisplay.drawRect(barX, barY, barWidth, barHeight, SSD1306_WHITE);
+    leftDisplay.fillRect(barX + 1, barY + 1, barFillWidth, barHeight - 2, SSD1306_WHITE);
+
+    rightDisplay.drawRect(barX, barY, barWidth, barHeight, SSD1306_WHITE);
+    rightDisplay.fillRect(barX + 1, barY + 1, barFillWidth, barHeight - 2, SSD1306_WHITE);
+
+    // Print progress percentage
+    uint16_t posY = barY + barHeight + 5;
+    String progressText = String(otaProgress) + "%";
+    int16_t x1, y1;
+    uint16_t textWidth, textHeight;
+
+    // Calculate the width of the progress text
+    leftDisplay.getTextBounds(progressText, 0, 0, &x1, &y1, &textWidth, &textHeight);
+    leftDisplay.setCursor((leftDisplay.width() - textWidth) / 2, posY);
+    leftDisplay.print(progressText);
+
+    rightDisplay.getTextBounds(progressText, 0, 0, &x1, &y1, &textWidth, &textHeight);
+    rightDisplay.setCursor((rightDisplay.width() - textWidth) / 2, posY);
+    rightDisplay.print(progressText);
+
+    // Update the displays
+    leftDisplay.display();
+    rightDisplay.display();
+}
+
 /**
  * @brief Task for managing the displays.
  *
@@ -203,15 +269,16 @@ void displayLowPower()
 void displayTask(void *pvParameters)
 {
     TickType_t xLastWakeTime = xTaskGetTickCount();
-
     bool displayEnabled = true;
 
+    // Initialize the I2C bus
     Wire.begin();
 
-    Serial.println("displayTask started");
-
+    // Setup the displays
     setupDisplay(leftDisplay, LEFT_SCREEN_ADDRESS);
     setupDisplay(rightDisplay, RIGHT_SCREEN_ADDRESS);
+
+    Serial.println("displayTask started");
 
     // Main task loop
     for (;;)
@@ -241,6 +308,11 @@ void displayTask(void *pvParameters)
                 displayLowPower();
                 // Delay to control the blink rate
                 xTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(500));
+                break;
+            case DISPLAY_OTA_UPDATE:
+                displayOtaUpdate();
+                // Delay to control the blink rate
+                xTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(100));
                 break;
         }
     }
