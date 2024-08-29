@@ -15,6 +15,7 @@
 
 #include <data_structures.h>
 #include "display.h"
+#include "power_manager.h"
 
 // Task parameters
 #define DISPLAY_TASK_STACK_SIZE (4 * 1024U)
@@ -28,6 +29,9 @@
 // Display addresses
 #define LEFT_SCREEN_ADDRESS  0x3C
 #define RIGHT_SCREEN_ADDRESS 0x3D
+
+// BLink with the battery icon if the battery level is lower than this threshold
+#define BATTERY_NOTIFICATION_THRESHOLD 20
 
 // Global variables
 extern controller_data_struct dataToSend;
@@ -129,8 +133,8 @@ void printTitle(Adafruit_SSD1306 &display, const char *title, uint16_t batteryVo
     display.setCursor(0, 0);
     display.println(title);
 
-    // Calculate the battery level percentage (assuming 3.0V to 4.2V range)
-    float batteryLevel = (batteryVoltage - 3000) / 12.0; // Convert mV to percentage
+    // Calculate the battery level percentage (assuming 3.4V to 4.2V range)
+    uint8_t batteryLevel = calculateBatteryLevel(batteryVoltage);
 
     // Draw the battery icon
     int batteryIconWidth = 16;
@@ -151,17 +155,23 @@ void printTitle(Adafruit_SSD1306 &display, const char *title, uint16_t batteryVo
     int batteryLevelWidth = (batteryIconWidth - 2) * (batteryLevel / 100.0);
     display.fillRect(batteryIconX + 1, batteryIconY + 1, batteryLevelWidth, batteryIconHeight - 2, SSD1306_WHITE);
 
-    // Draw the battery voltage
-    int batteryVoltageWidth = 30;
-    display.setCursor(batteryIconX - batteryVoltageWidth - 5, batteryIconY);
-    display.setTextSize(1);
-    display.print(batteryVoltage / 1000.0, 2); // Print voltage in Volts
-    display.print("V");
+    // Print the battery percentage with right-alignment
+    String batteryPercentageText = String(batteryLevel) + "%";
+    int16_t x1, y1;
+    uint16_t textWidth, textHeight;
+    display.getTextBounds(batteryPercentageText, 0, 0, &x1, &y1, &textWidth, &textHeight);
+    display.setCursor(batteryIconX - textWidth - 3, batteryIconY);
+    display.print(batteryPercentageText);
 
     // Draw the uptime on the next line
     display.setCursor(0, 8);
     display.print("Uptime: ");
     display.print(uptimeSec);
+
+    display.setCursor(0, 56);
+    display.print("Battery: ");
+    display.print(batteryVoltage / 1000.0, 3); // Print voltage in Volts
+    display.print("V");
 
     display.display();
 }

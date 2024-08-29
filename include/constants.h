@@ -20,6 +20,7 @@
 #define INACTIVITY_PERIOD_FOR_POWER_OFF    10 * 60 * 1000 // 10 minutes
 // Period between battery voltage readings in milliseconds
 #define BATTERY_READ_INTERVAL              5 * 60 * 1000 // 5 minutes
+#define BATTERY_LOW_THRESHOLD              3400          // 3.4V
 
 // Number of levers
 #define LEVERS_COUNT 6

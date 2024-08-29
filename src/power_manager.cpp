@@ -7,13 +7,22 @@
  *
  */
 
+#include <data_structures.h>
+#include "display.h"
 #include "power_manager.h"
 
 #include "constants.h"
 #include "wifi_ota_manager.h"
 
 // Formula to calculate the battery voltage (with a shorted diode)
-#define CALCULATE_BATT_MV(mv) ((mv) * 7.69 + 323)
+#define CALCULATE_BATT_MV(mv) ((mv) * 6.92 + 337)
+
+// LiPo battery voltage limits for this setup
+#define MIN_BATT_MV 3200
+#define MAX_BATT_MV 4200
+
+// Global variables
+extern controller_data_struct dataToSend;
 
 uint32_t lastBatteryReadTime = 0;
 
@@ -34,7 +43,26 @@ void go_to_deep_sleep()
 void setupPowerManager(Button &powerBtn)
 {
     pinMode(BATTERY_VOLTAGE_PIN, INPUT);
-    analogSetPinAttenuation(BATTERY_VOLTAGE_PIN, ADC_11db);
+    analogSetPinAttenuation(BATTERY_VOLTAGE_PIN, ADC_ATTENDB_MAX);
+}
+
+/**
+ * Calculates the battery percentage using a sigmoidal function.
+ *
+ * @param voltage The input voltage value.
+ * @return The sigmoidal value calculated based on the input voltage.
+ *
+ * @note Inspired by this repository: https://github.com/rlogiacco/BatterySense
+ */
+uint8_t calculateBatteryLevel(uint16_t voltage)
+{
+    if (voltage <= MIN_BATT_MV)
+        return 0;
+    if (voltage >= MAX_BATT_MV)
+        return 100;
+
+    uint8_t result = 105 - (105 / (1 + pow(1.724 * (voltage - MIN_BATT_MV) / (MAX_BATT_MV - MIN_BATT_MV), 5.5)));
+    return result >= 100 ? 100 : result;
 }
 
 uint16_t getAveragedBattVoltage()
@@ -95,4 +123,27 @@ uint16_t readBatteryVoltage(bool reEnableWiFi)
     }
 
     return battMv;
+}
+
+/**
+ * @brief Checks the battery voltage and goes into deep sleep mode if it is too low.
+ *
+ * This function reads the battery voltage and checks if it is too low. If the battery voltage is below a certain threshold,
+ * it displays a low power message on the displays, goes into deep sleep mode, and disables the display and status LED.
+ */
+void verifyBatteryLevel()
+{
+    // Read the battery voltage before going to sleep
+    dataToSend.battery = readBatteryVoltage(false);
+    if (dataToSend.battery < BATTERY_LOW_THRESHOLD)
+    {
+        Serial.println("Battery voltage is too low");
+        // Show low power message on the displays
+        setDisplayState(DISPLAY_LOW_POWER);
+        // Go to deep sleep mode after delay
+        delay(5000);
+        disableDisplay();
+        digitalWrite(STATUS_LED, LOW);
+        go_to_deep_sleep();
+    }
 }

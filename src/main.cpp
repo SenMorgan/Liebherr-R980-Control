@@ -210,18 +210,9 @@ void setup()
 
     // Setup power manager and read battery voltage during startup
     setupPowerManager(powerBtn);
-    dataToSend.battery = readBatteryVoltage(false);
-    if (dataToSend.battery < 3400)
-    {
-        Serial.println("Battery voltage is too low");
-        // Show low power message on the displays
-        setDisplayState(DISPLAY_LOW_POWER);
-        // Go to deep sleep mode after delay
-        delay(5000);
-        disableDisplay();
-        digitalWrite(STATUS_LED, LOW);
-        go_to_deep_sleep();
-    }
+    // Delay to stabilize the voltage before measuring
+    delay(300);
+    verifyBatteryLevel();
 
     // Turn ON the board and potentiometers power
     digitalWrite(BOARD_POWER, HIGH);
