@@ -169,8 +169,8 @@ void printTitle(Adafruit_SSD1306 &display, const char *title, uint16_t batteryVo
 // ############################## Screens ##############################
 void displayDefault()
 {
-    printTitle(leftDisplay, "Controller", dataToSend.battery, millis() / 1000);
-    printTitle(rightDisplay, "Excavator", receivedData.battery, receivedData.uptime);
+    printTitle(leftDisplay, "CONTROLLER", dataToSend.battery, millis() / 1000);
+    printTitle(rightDisplay, "EXCAVATOR", receivedData.battery, receivedData.uptime);
 }
 
 void displayLowPower()
